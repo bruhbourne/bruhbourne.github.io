@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест по Истории России</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            padding-bottom: 60px; /* Отступ внизу, чтобы футер не перекрывал контент при прокрутке */
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        /* Стили для титульной страницы */
+        .welcome-screen {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .welcome-screen p {
+            font-size: 1.3em;
+            color: #555;
+            margin-bottom: 30px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f9fbfc;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            display: none; /* По умолчанию скрываем все вопросы */
+        }
+        .question-block h3 {
+            margin-top: 0;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        .option {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+        }
+        .option:hover { background: #eef2f5; }
+        .option input { margin-right: 10px; }
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #c3e6cb !important;
+            color: #155724;
+        }
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #f5c6cb !important;
+            color: #721c24;
+        }
+        .nav-buttons {
+            display: none; /* Скрыта, пока не нажат старт */
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover { background: #2980b9; }
+        #results {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+        /* Стили для фиксированного футера */
+        .quiz-footer {
+            position: fixed;
+            bottom: 15px; /* Отступ от нижнего края экрана */
+            left: 50%;
+            transform: translateX(-50%); /* Точное центрирование по горизонтали */
+            text-align: center;
+            z-index: 1000; /* Чтобы футер всегда был поверх других элементов */
+        }
+        .quiz-footer a {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 0.95em;
+            color: #7f8c8d; /* Спокойный серый цвет */
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s, border-bottom 0.2s;
+            padding-bottom: 2px;
+            border-bottom: 1px solid transparent;
+        }
+        .quiz-footer a:hover {
+            color: #3498db; /* Меняет цвет под стиль теста */
+            border-bottom: 1px solid #3498db; /* Появляется линия подчеркивания */
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Тест по Истории</h1>
+    
+    <div id="welcome-screen" class="welcome-screen">
+        <p>На одну попытку будут случайно выбраны 20 вопросов из 180</p>
+        <button onclick="startQuiz()">Начать попытку</button>
+    </div>
+
+    <div id="quiz-container"></div>
+    
+    <div class="nav-buttons" id="nav-panel">
+        <button id="prev-btn" onclick="changeQuestion(-1)" style="visibility: hidden;">Назад</button>
+        <button id="next-btn" onclick="changeQuestion(1)">Далее</button>
+    </div>
+
+    <div id="results"></div>
+</div>
+
+<footer class="quiz-footer">
+    <a href="https://t.me/bruhbrn" target="_blank">t.me/bruhbrn</a>
+</footer>
+
+<script>
+    const questionsPool = [
+        {
+            text: "Что выступает объектом исторической науки?",
+            multi: false,
+            options: [
+                { text: "Конкретные факты", correct: false },
+                { text: "Прошлое общества", correct: true },
+                { text: "Труды историков", correct: false },
+                { text: "Культура и быт людей", correct: false }
+            ]
+        },
+        {
+            text: "Как называется историческая дисциплина, изучающая труды историков разных эпох?",
+            multi: false,
+            options: [
+                { text: "Археология", correct: false },
+                { text: "Методология", correct: false },
+                { text: "Историография", correct: true },
+                { text: "Хронология", correct: false }
+            ]
+        },
+        {
+            text: "Какой кочевой народ в VII–III вв. до н.э. обитал в Причерноморских степях и оставил богатое наследие в виде курганов?",
+            multi: false,
+            options: [
+                { text: "Сарматы", correct: false },
+                { text: "Гунны", correct: false },
+                { text: "Хазары", correct: false },
+                { text: "Скифы", correct: true }
+            ]
+        },
+        {
+            text: "Какое государство существовало в VII–X вв. в Нижнем Поволжье и Северном Кавказе, где часть знати приняла иудаизм?",
+            multi: false,
+            options: [
+                { text: "Боспорское царство", correct: false },
+                { text: "Хазарский каганат", correct: true },
+                { text: "Золотая Орда", correct: false },
+                { text: "Волжская Булгария", correct: false }
+            ]
+        },
+        {
+            text: "В каком году, согласно летописи «Повесть временных лет», состоялось «призвание варягов»?",
+            multi: false,
+            options: [
+                { text: "882", correct: false },
+                { text: "988", correct: false },
+                { text: "862", correct: true },
+                { text: "912", correct: false }
+            ]
+        },
+        {
+            text: "Кто из правителей Руси провел реформу системы сбора налогов, установив четкие размеры (уроки) и места сбора (погосты)?",
+            multi: false,
+            options: [
+                { text: "Князь Олег", correct: false },
+                { text: "Князь Игорь", correct: false },
+                { text: "Князь Святослав", correct: false },
+                { text: "Княгиня Ольга", correct: true }
+            ]
+        },
+        {
+            text: "Какие достижения относятся к периоду правления Ярослава Мудрого?",
+            multi: true,
+            options: [
+                { text: "Достижение международного признания Руси через браки с европейскими дворами", correct: true },
+                { text: "Окончательный разгром Хазарского каганата", correct: false },
+                { text: "Создание первого письменного свода законов — «Русской правды»", correct: true },
+                { text: "Крещение Руси по византийскому обряду", correct: false }
+            ]
+        },
+        {
+            text: "Какое русское княжество в период политической раздробленности отличалось сильным влиянием боярства?",
+            multi: false,
+            options: [
+                { text: "Владимиро-Суздальское", correct: false },
+                { text: "Новгородская земля", correct: false },
+                { text: "Галицко-Волынское", correct: true },
+                { text: "Киевское", correct: false }
+            ]
+        },
+        {
+            text: "Какой крупный город Северо-Западной Руси монгольские войска хана Батыя не смогли взять в ходе нашествия 1237–1241 гг.?",
+            multi: false,
+            options: [
+                { text: "Рязань", correct: false },
+                { text: "Владимир", correct: false },
+                { text: "Киев", correct: false },
+                { text: "Новгород", correct: true }
+            ]
+        },
+        {
+            text: "В какой битве (1380 г.) русские войска разгромили монгольское войско хана Мамая?",
+            multi: false,
+            options: [
+                { text: "Битва на реке Калке", correct: false },
+                { text: "Невская битва", correct: false },
+                { text: "Куликовская битва", correct: true },
+                { text: "Ледовое побоище", correct: false }
+            ]
+        },
+        {
+            text: "При каком правителе произошло «Стояние на Угре» (1480 г.), ознаменовавшее окончательное свержение ордынского ига?",
+            multi: false,
+            options: [
+                { text: "Иван Калита", correct: false },
+                { text: "Дмитрий Донской", correct: false },
+                { text: "Василий II Тёмный", correct: false },
+                { text: "Иван III", correct: true }
+            ]
+        },
+        {
+            text: "Какой документ в 1497 году ввел Юрьев день — ограниченное право крестьян на переход от одного хозяина к другому?",
+            multi: false,
+            options: [
+                { text: "Русская правда", correct: false },
+                { text: "Судебник", correct: true },
+                { text: "Соборное уложение", correct: false },
+                { text: "Табель о рангах", correct: false }
+            ]
+        },
+        {
+            text: "Кто является автором знаменитой иконы «Троица», созданной в XIV–XV вв.?",
+            multi: false,
+            options: [
+                { text: "Феофан Грек", correct: false },
+                { text: "Дионисий", correct: false },
+                { text: "Андрей Рублёв", correct: true },
+                { text: "Симон Ушаков", correct: false }
+            ]
+        },
+        {
+            text: "Как называлось неформальное правительство, на которое опирался Иван IV (Грозный) в начале своего правления?",
+            multi: false,
+            options: [
+                { text: "Боярская дума", correct: false },
+                { text: "Земский собор", correct: false },
+                { text: "Избранная Рада", correct: true },
+                { text: "Опричный двор", correct: false }
+            ]
+        },
+        {
+            text: "Какое из перечисленных событий НЕ относится к реформам Ивана Грозного 1549–1560 гг.?",
+            multi: false,
+            options: [
+                { text: "Создание стрелецкого войска", correct: false },
+                { text: "Принятие нового Судебника", correct: false },
+                { text: "Созыв первого Земского собора", correct: false },
+                { text: "Введение «Табели о рангах»", correct: true }
+            ]
+        },
+        {
+            text: "Какие ханства были завоёваны и присоединены к России в 1550-е годы при Иване IV?",
+            multi: true,
+            options: [
+                { text: "Крымское", correct: false },
+                { text: "Казанское", correct: true },
+                { text: "Сибирское", correct: false },
+                { text: "Астраханское", correct: true }
+            ]
+        },
+        {
+            text: "Кто организовал Второе народное ополчение в Нижнем Новгороде в 1611–1612 гг.?",
+            multi: false,
+            options: [
+                { text: "Иван Заруцкий и Прокопий Ляпунов", correct: false },
+                { text: "Василий Шуйский и Лжедмитрий I", correct: false },
+                { text: "Богдан Хмельницкий и Степан Разин", correct: false },
+                { text: "Кузьма Минин и Дмитрий Пожарский", correct: true }
+            ]
+        },
+        {
+            text: "Какой свод законов 1649 года юридически закрепил окончательное оформление крепостного права в России?",
+            multi: false,
+            options: [
+                { text: "Судебник Ивана IV", correct: false },
+                { text: "Соборное уложение", correct: true },
+                { text: "Жалованная грамота дворянству", correct: false },
+                { text: "Манифест о вольности дворянства", correct: false }
+            ]
+        },
+        {
+            text: "Кто стал главным идеологом и лидером старообрядцев во время церковного раскола в XVII веке?",
+            multi: false,
+            options: [
+                { text: "Патриарх Никон", correct: false },
+                { text: "Монах Филофей", correct: false },
+                { text: "Протопоп Аввакум", correct: true },
+                { text: "Иосиф Волоцкий", correct: false }
+            ]
+        },
+        {
+            text: "Какое сражение 1709 года стало переломным в Северной войне и привело к разгрому шведского короля Карла XII?",
+            multi: false,
+            options: [
+                { text: "Битва под Нарвой", correct: false },
+                { text: "Сражение при Гросс-Егерсдорфе", correct: false },
+                { text: "Полтавская битва", correct: true },
+                { text: "Гангутское сражение", correct: false }
+            ]
+        },
+        {
+            text: "Чей манифест (1762 г.) освободил дворянство от обязательной государственной службы?",
+            multi: false,
+            options: [
+                { text: "Петра I", correct: false },
+                { text: "Елизаветы Петровны", correct: false },
+                { text: "Петра III", correct: true },
+                { text: "Екатерины II", correct: false }
+            ]
+        },
+        {
+            text: "Под каким термином в историю вошла политика Екатерины II, сочетавшая идеи европейских мыслителей с сохранением самодержавия?",
+            multi: false,
+            options: [
+                { text: "Просвещённый абсолютизм", correct: true },
+                { text: "Третьеиюньская монархия", correct: false },
+                { text: "Консервативная модернизация", correct: false },
+                { text: "Бироновщина", correct: false }
+            ]
+        },
+        {
+            text: "Какое важное political событие произошло в Петербурге 14 декабря 1825 года?",
+            multi: false,
+            options: [
+                { text: "Отмена крепостного права", correct: false },
+                { text: "Убийство императора Павла I", correct: false },
+                { text: "Восстание декабристов на Сенатской площади", correct: true },
+                { text: "Создание Государственного совета", correct: false }
+            ]
+        },
+        {
+            text: "Какие идеи отстаивали славянофилы в общественных дискуссиях 1830–1840-х годов?",
+            multi: true,
+            options: [
+                { text: "Russia должна пройти тот же путь развития, что и страны Западной Европы", correct: false },
+                { text: "Утверждение особого исторического пути России", correct: true },
+                { text: "Опора на православие и крестьянский общинный уклад", correct: true },
+                { text: "Свержение монархии революционным путем", correct: false }
+            ]
+        },
+        {
+            text: "Какого числа был подписан Манифест Александра II об отмене крепостного права?",
+            multi: false,
+            options: [
+                { text: "14 декабря 1825 г.", correct: false },
+                { text: "19 февраля 1861 г.", correct: true },
+                { text: "1 марта 1881 г.", correct: false },
+                { text: "17 октября 1905 г.", correct: false }
+            ]
+        },
+        {
+            text: "Какая реформа П.А. Столыпина позволила крестьянам выходить из общины с закреплением личного надела земли?",
+            multi: false,
+            options: [
+                { text: "Земская реформа", correct: false },
+                { text: "Аграрная реформа", correct: true },
+                { text: "Судебная реформа", correct: false },
+                { text: "Финансовая реформа", correct: false }
+            ]
+        },
+        {
+            text: "Какие два ключевых декрета были приняты на II Съезде Советов сразу после Октябрьского переворота в 1917 году?",
+            multi: false,
+            options: [
+                { text: "Декрет о власти и Декрет о национализации", correct: false },
+                { text: "Декрет о продналоге и Декрет о 8-часовом рабочем дне", correct: false },
+                { text: "Декрет о мире и Декрет о земле", correct: true },
+                { text: "Декрет о РККА и Декрет о ВЧК", correct: false }
+            ]
+        },
+        {
+            text: "Какая битва окончательно закрепила коренной перелом в ходе Великой Отечественной войны (июль–август 1943 г.)?",
+            multi: false,
+            options: [
+                { text: "Битва за Москву", correct: false },
+                { text: "Сталинградская битва", correct: false },
+                { text: "Битва на Курской дуге", correct: true },
+                { text: "Берлинская наступательная операция", correct: false }
+            ]
+        },
+        {
+            text: "На каком съезде КПСС в 1956 году Н.С. Хрущёв выступил с закрытым докладом, разоблачающим «культ личности» Сталина?",
+            multi: false,
+            options: [
+                { text: "XIX съезд", correct: false },
+                { text: "XX съезд", correct: true },
+                { text: "XXII съезд", correct: false },
+                { text: "XXVII съезд", correct: false }
+            ]
+        },
+        {
+            text: "Кто руководил проведением экономических реформ в начале 1990-х годов («шоковая терапия» и либерализация цен)?",
+            multi: false,
+            options: [
+                { text: "Е.М. Примаков", correct: false },
+                { text: "Б.Н. Ельцин", correct: false },
+                { text: "Р.И. Хасбулатов", correct: false },
+                { text: "Е.Т. Гайдар", correct: true }
+            ]
+        },
+        {
+            text: "Кто является создателем неевклидовой геометрии (1820–40-е гг.)?",
+            multi: false,
+            options: [
+                { text: "Н.И. Лобачевский", correct: true },
+                { text: "Д.И. Менделеев", correct: false },
+                { text: "И.П. Павлов", correct: false },
+                { text: "И.И. Мечников", correct: false }
+            ]
+        },
+        {
+            text: "Какой архитектурный стиль господствовал в России в первой половине XIX века (ампир), примером которого служит Исаакиевский собор?",
+            multi: false,
+            options: [
+                { text: "Нарышкинское барокко", correct: false },
+                { text: "Высокий классицизм", correct: true },
+                { text: "Модерн", correct: false },
+                { text: "Шатровый стиль", correct: false }
+            ]
+        },
+        {
+            text: "Кто разработал проект создания Государственного совета, учрежденного Александром I в 1810 году?",
+            multi: false,
+            options: [
+                { text: "Н.Н. Новосильцев", correct: false },
+                { text: "М.М. Сперанский", correct: true },
+                { text: "А.А. Аракчеев", correct: false },
+                { text: "Е.Ф. Канкрин", correct: false }
+            ]
+        },
+        {
+            text: "Какое сражение стало решающим в ходе Отечественной войны 1812 года?",
+            multi: false,
+            options: [
+                { text: "Битва под Аустерлицем", correct: false },
+                { text: "Сражение при Малоярославце", correct: false },
+                { text: "Бородинская битва", correct: true },
+                { text: "Сражение при Лейпциге", correct: false }
+            ]
+        },
+        {
+            text: "Какая организация была создана при Николае I для выполнения функций политической полиции?",
+            multi: false,
+            options: [
+                { text: "ВЧК", correct: false },
+                { text: "III отделение", correct: true },
+                { text: "Опричный двор", correct: false },
+                { text: "Министерство внутренних дел", correct: false }
+            ]
+        },
+        {
+            text: "Какая реформа Александра II 1864 года ввела состязательный процесс, независимых судей и суд присяжных?",
+            multi: false,
+            options: [
+                { text: "Земская реформа", correct: false },
+                { text: "Городская реформа", correct: false },
+                { text: "Судебная реформа", correct: true },
+                { text: "Военная реформа", correct: false }
+            ]
+        },
+        {
+            text: "Какое событие резко затормозило реформы и привело к началу контрреформ в 1881 году?",
+            multi: false,
+            options: [
+                { text: "Начало Русско-турецкой войны", correct: false },
+                { text: "Убийство Александра II народовольцами", correct: true },
+                { text: "Восстание декабристов", correct: false },
+                { text: "Крымская война", correct: false }
+            ]
+        },
+        {
+            text: "На какие две организации раскололось общество «Земля и воля» в 1879 году?",
+            multi: true,
+            options: [
+                { text: "Черный передел", correct: true },
+                { text: "Союз благоденствия", correct: false },
+                { text: "Народная воля", correct: true },
+                { text: "Северное общество", correct: false }
+            ]
+        },
+        {
+            text: "Какое событие 1905 года учредило Государственную думу с законодательными полномочиями?",
+            multi: false,
+            options: [
+                { text: "Манифест 17 октября", correct: true },
+                { text: "Третьеиюньский переворот", correct: false },
+                { text: "Указ о вольных хлебопашцах", correct: false },
+                { text: "Созыв Уложенной комиссии", correct: false }
+            ]
+        },
+        {
+            text: "Какая выдающаяся военная операция русской армии, разгромившая австро-венгерскую армию, произошла в 1916 году?",
+            multi: false,
+            options: [
+                { text: "Взятие Перемышля", correct: false },
+                { text: "Брусиловский прорыв", correct: true },
+                { text: "Восточно-Прусская операция", correct: false },
+                { text: "Оборона Порт-Артура", correct: false }
+            ]
+        },
+        {
+            text: "Кто из перечисленных отечественных ученых стал лауреатом Нобелевской премии (1904 г.) за труды по физиологии пищеварения?",
+            multi: false,
+            options: [
+                { text: "И.И. Мечников", correct: false },
+                { text: "Д.И. Менделеев", correct: false },
+                { text: "И.П. Павлов", correct: true },
+                { text: "Н.И. Лобачевский", correct: false }
+            ]
+        },
+        {
+            text: "Кто является основателем Московского Художественного театра (1898 г.)?",
+            multi: true,
+            options: [
+                { text: "К.С. Станиславский", correct: true },
+                { text: "В.И. Немирович-Данченко", correct: true },
+                { text: "Ф.Г. Волков", correct: false },
+                { text: "В.Э. Мейерхольд", correct: false }
+            ]
+        },
+        {
+            text: "Какие два центра власти образовались в России после Февральской революции 1917 года, установив двоевластие?",
+            multi: false,
+            options: [
+                { text: "Государственная дума и Сенат", correct: false },
+                { text: "Временное правительство и Петроградский совет", correct: true },
+                { text: "СНК и ВЧК", correct: false },
+                { text: "Земский собор и Боярская дума", correct: false }
+            ]
+        },
+        {
+            text: "В каком году РСФСР, Украинская, Белорусская и Закавказская ССР подписали договор о создании СССР?",
+            multi: false,
+            options: [
+                { text: "1917", correct: false },
+                { text: "1922", correct: true },
+                { text: "1924", correct: false },
+                { text: "1936", correct: false }
+            ]
+        },
+        {
+            text: "Как называлась экономическая политика большевиков в годы Гражданской войны, включавшая всеобщую трудовую повинность и продразверстку?",
+            multi: false,
+            options: [
+                { text: "Новая экономическая политика (НЭП)", correct: false },
+                { text: "Индустриализация", correct: false },
+                { text: "Военный коммунизм", correct: true },
+                { text: "Шоковая терапия", correct: false }
+            ]
+        },
+        {
+            text: "Какие процессы были ключевыми составляющими «Великого перелома», объявленного в 1929 году?",
+            multi: true,
+            options: [
+                { text: "Форсированная коллективизация", correct: true },
+                { text: "Введение продналога", correct: false },
+                { text: "Ускоренная индустриализация", correct: true },
+                { text: "Переход предприятий на хозрасчет", correct: false }
+            ]
+        },
+        {
+            text: "Какая битва Великой Отечественной войны завершилась 2 февраля 1943 года капитуляцией 6-й немецкой армии Паулюса?",
+            multi: false,
+            options: [
+                { text: "Битва за Москву", correct: false },
+                { text: "Сталинградская битва", correct: true },
+                { text: "Битва на Курской дуге", correct: false },
+                { text: "Берлинская операция", correct: false }
+            ]
+        },
+        {
+            text: "Какая операция партизан в годы Великой Отечественной войны парализовала немецкие коммуникации на оккупированных территориях?",
+            multi: false,
+            options: [
+                { text: "«Багратион»", correct: false },
+                { text: "«Уран»", correct: false },
+                { text: "«Рельсовая война»", correct: true },
+                { text: "«Тайфун»", correct: false }
+            ]
+        },
+        {
+            text: "В каком году СССР испытал атомную бомбу, достигнув ядерного паритета с западным блоком?",
+            multi: false,
+            options: [
+                { text: "1945", correct: false },
+                { text: "1949", correct: true },
+                { text: "1953", correct: false },
+                { text: "1961", correct: false }
+            ]
+        },
+        {
+            text: "Какое событие 1961 года стало важнейшим достижением СССР в период «Оттепели»?",
+            multi: false,
+            options: [
+                { text: "Создание атомной бомбы", correct: false },
+                { text: "Запуск первого искусственного спутника Земли", correct: false },
+                { text: "Первый полет человека в космос (Юрий Гагарин)", correct: true },
+                { text: "Ввод войск в Афганистан", correct: false }
+            ]
+        },
+        {
+            text: "Как официально называлась государственная идеология в период правления Л.И. Брежнева?",
+            multi: false,
+            options: [
+                { text: "Развитой социализм", correct: true },
+                { text: "Перестройка", correct: false },
+                { text: "Просвещенный абсолютизм", correct: false },
+                { text: "Военный коммунизм", correct: false }
+            ]
+        },
+        {
+            text: "Ввод советских войск в какую страну с 1979 года подорвал международный престиж СССР?",
+            multi: false,
+            options: [
+                { text: "Чехословакия", correct: false },
+                { text: "Венгрия", correct: false },
+                { text: "Афганистан", correct: true },
+                { text: "Куба", correct: false }
+            ]
+        },
+        {
+            text: "Какое событие 1986 года стало серьезным испытанием для страны на начальном этапе перестройки?",
+            multi: false,
+            options: [
+                { text: "Карибский кризис", correct: false },
+                { text: "Авария на Чернобыльской АЭС", correct: true },
+                { text: "Дефолт", correct: false },
+                { text: "Августовский путч", correct: false }
+            ]
+        },
+        {
+            text: "Как назывался орган, созданный 19 августа 1991 года рядом высших чиновников с целью захвата власти?",
+            multi: false,
+            options: [
+                { text: "ГКЧП", correct: true },
+                { text: "СНК", correct: false },
+                { text: "Верховный Совет", correct: false },
+                { text: "Уложенная комиссия", correct: false }
+            ]
+        },
+        {
+            text: "Соглашения о прекращении существования СССР и создании СНГ (декабрь 1991 г.) были подписаны в:",
+            multi: false,
+            options: [
+                { text: "Ново-Огарево", correct: false },
+                { text: "Беловежской пуще", correct: true },
+                { text: "Ялте", correct: false },
+                { text: "Женеве", correct: false }
+            ]
+        },
+        {
+            text: "Кто из политических деятелей возглавлял Верховный Совет и противостоял президенту Б.Н. Ельцину во время политического кризиса 1993 года?",
+            multi: false,
+            options: [
+                { text: "Е.Т. Гайдар", correct: false },
+                { text: "Р.И. Хасбулатов", correct: true },
+                { text: "Е.М. Примаков", correct: false },
+                { text: "Г.А. Зюганов", correct: false }
+            ]
+        },
+        {
+            text: "Какое экономическое событие 1998 года в России вновь привело к обесцениванию накоплений граждан?",
+            multi: false,
+            options: [
+                { text: "Либерализация цен", correct: false },
+                { text: "Дефолт", correct: true },
+                { text: "Ваучерная приватизация", correct: false },
+                { text: "Переход к плановой экономике", correct: false }
+            ]
+        },
+        {
+            text: "Какой специальный фонд был создан в России в 2004 году для управления нефтяными доходами в условиях высоких цен на энергоносители?",
+            multi: false,
+            options: [
+                { text: "Пенсионный фонд", correct: false },
+                { text: "Фонд национального благосостояния", correct: false },
+                { text: "Стабилизационный фонд", correct: true },
+                { text: "Резервный фонд", correct: false }
+            ]
+        },
+        {
+            text: "В каком году Крым был принят в состав Российской Федерации по итогам референдума?",
+            multi: false,
+            options: [
+                { text: "2008", correct: false },
+                { text: "2014", correct: true },
+                { text: "2018", correct: false },
+                { text: "2022", correct: false }
+            ]
+        },
+        {
+            text: "С какой даты началась Специальная военная операция (СВО)?",
+            multi: false,
+            options: [
+                { text: "18 марта 2014 г.", correct: false },
+                { text: "24 февраля 2022 г.", correct: true },
+                { text: "30 сентября 2022 г.", correct: false },
+                { text: "8 августа 2008 г.", correct: false }
+            ]
+        },
+        {
+            text: "К какому типу исторических источников относятся летописи, хроники и законодательные акты?",
+            multi: false,
+            options: [
+                { text: "Вещественные", correct: false },
+                { text: "Устные", correct: false },
+                { text: "Письменные", correct: true },
+                { text: "Изобразительные", correct: false }
+            ]
+        },
+        {
+            text: "Кто из перечисленных деятелей стоял у истоков российской исторической науки в XVIII веке?",
+            multi: false,
+            options: [
+                { text: "В.Н. Татищев", correct: true },
+                { text: "В.О. Ключевский", correct: false },
+                { text: "С.М. Solovyev", correct: false },
+                { text: "Н.М. Карамзин", correct: false }
+            ]
+        },
+        {
+            text: "Какая функция исторической науки способствует формированию патриотизма и гражданственности?",
+            multi: false,
+            options: [
+                { text: "Познавательная", correct: false },
+                { text: "Мировоззренческая", correct: false },
+                { text: "Практически-политическая", correct: false },
+                { text: "Воспитательная", correct: true }
+            ]
+        },
+        {
+            text: "Какое государство со столицей в Пантикапее было основано греками-колонистами в Северном Причерноморье?",
+            multi: false,
+            options: [
+                { text: "Хазарский каганат", correct: false },
+                { text: "Волжская Булгария", correct: false },
+                { text: "Боспорское царство", correct: true },
+                { text: "Скифское царство", correct: false }
+            ]
+        },
+        {
+            text: "Какие из перечисленных племенных союзов относились к восточным славянам?",
+            multi: true,
+            options: [
+                { text: "Чудь", correct: false },
+                { text: "Поляне", correct: true },
+                { text: "Древляне", correct: true },
+                { text: "Печенеги", correct: false }
+            ]
+        },
+        {
+            text: "Кто из древнерусских правителей объединил Киев и Новгород в 882 году и провозгласил Киев «матерью городов русских»?",
+            multi: false,
+            options: [
+                { text: "Рюрик", correct: false },
+                { text: "Князь Олег", correct: true },
+                { text: "Князь Игорь", correct: false },
+                { text: "Князь Святослав", correct: false }
+            ]
+        },
+        {
+            text: "Какой выдающийся древнерусский князь-полководец окончательно разгромил Хазарский каганат?",
+            multi: false,
+            options: [
+                { text: "Владимир Святой", correct: false },
+                { text: "Ярослав Мудрый", correct: false },
+                { text: "Князь Святослав", correct: true },
+                { text: "Владимир Мономах", correct: false }
+            ]
+        },
+        {
+            text: "На каком съезде князей в 1097 году было принято решение «каждый да держит отчину свою», фактически закрепившее политическую раздробленность?",
+            multi: false,
+            options: [
+                { text: "Киевском съезде", correct: false },
+                { text: "Любечском съезде", correct: true },
+                { text: "Новгородском вече", correct: false },
+                { text: "Владимирском соборе", correct: false }
+            ]
+        },
+        {
+            text: "Поход какого князя против половцев (1185 г.) лег в основу выдающегося памятника древнерусской литературы?",
+            multi: false,
+            options: [
+                { text: "Юрия Долгорукого", correct: false },
+                { text: "Александра Невского", correct: false },
+                { text: "Игоря Святославича", correct: true },
+                { text: "Андрея Боголюбского", correct: false }
+            ]
+        },
+        {
+            text: "Какое событие 1325 года значительно укрепило духовный авторитет Москвы в период правления Ивана Калиты?",
+            multi: false,
+            options: [
+                { text: "Постройка храма Василия Блаженного", correct: false },
+                { text: "Перенос митрополичьей кафедры в Москву", correct: true },
+                { text: "Основание Троице-Сергиева монастыря", correct: false },
+                { text: "Созыв первого Стоглавого собора", correct: false }
+            ]
+        },
+        {
+            text: "Как звали московского князя, который одержал победу в длительной феодальной войне второй четверти XV века, несмотря на то, что был ослеплен противниками?",
+            multi: false,
+            options: [
+                { text: "Василий I", correct: false },
+                { text: "Василий II Тёмный", correct: true },
+                { text: "Юрий Звенигородский", correct: false },
+                { text: "Дмитрий Шемяка", correct: false }
+            ]
+        },
+        {
+            text: "Брак с какой византийской принцессой способствовал принятию Иваном III герба в виде двуглавого орла и позиционированию Москвы как «Третьего Рима»?",
+            multi: false,
+            options: [
+                { text: "Анной Византийской", correct: false },
+                { text: "Еленой Глинской", correct: false },
+                { text: "Софьей Палеолог", correct: true },
+                { text: "Марией Темрюковной", correct: false }
+            ]
+        },
+        {
+            text: "Как в древнеславянском языческом пантеоне звали бога грома?",
+            multi: false,
+            options: [
+                { text: "Велес", correct: false },
+                { text: "Мокошь", correct: false },
+                { text: "Перун", correct: true },
+                { text: "Даждьбог", correct: false }
+            ]
+        },
+        {
+            text: "Как называлось течение в Русской православной церкви (конец XV - начало XVI в.), представители которого во главе с Нилом Сорским выступали против владения монастырями землей?",
+            multi: false,
+            options: [
+                { text: "Иосифляне", correct: false },
+                { text: "Старообрядцы", correct: false },
+                { text: "Нестяжатели", correct: true },
+                { text: "Иконоборцы", correct: false }
+            ]
+        },
+        {
+            text: "Как назывался особый порядок управления страной, введенный Иваном IV в 1565–1572 гг. и сопровождавшийся политическим террором?",
+            multi: false,
+            options: [
+                { text: "Земщина", correct: false },
+                { text: "Бироновщина", correct: false },
+                { text: "Опричнина", correct: true },
+                { text: "Хованщина", correct: false }
+            ]
+        },
+        {
+            text: "Гибель какого царевича в Угличе в 1591 году стала одной из предпосылок пресечения династии Рюриковичей и начала Смутного времени?",
+            multi: false,
+            options: [
+                { text: "Царевича Ивана", correct: false },
+                { text: "Царевича Федора", correct: false },
+                { text: "Царевича Алексея", correct: false },
+                { text: "Царевича Дмитрия", correct: true }
+            ]
+        },
+        {
+            text: "Какие из перечисленных народных выступлений произошли в XVII веке, прозванном «бунташным веком»?",
+            multi: true,
+            options: [
+                { text: "Соляной бунт", correct: true },
+                { text: "Восстание декабристов", correct: false },
+                { text: "Медный бунт", correct: true },
+                { text: "Восстание Е.И. Пугачева", correct: false }
+            ]
+        },
+        {
+            text: "По условиям какого перемирия (1667 г.), завершившего войну с Речью Посполитой, Россия вернула себе Смоленск и получила Левобережную Украину?",
+            multi: false,
+            options: [
+                { text: "Андрусовского перемирия", correct: true },
+                { text: "Деулинского перемирия", correct: false },
+                { text: "Ништадтского мира", correct: false },
+                { text: "Ям-Запольского мира", correct: false }
+            ]
+        },
+        {
+            text: "Какой выдающийся памятник шатровой архитектуры был возведен на Красной площади в честь взятия Казани?",
+            multi: false,
+            options: [
+                { text: "Успенский собор", correct: false },
+                { text: "Собор Василия Блаженного", correct: true },
+                { text: "Храм Христа Спасителя", correct: false },
+                { text: "Петропавловский собор", correct: false }
+            ]
+        },
+        {
+            text: "Какой государственный орган был учрежден Петром I в 1721 году для управления Русской православной церковью после упразднения патриаршества?",
+            multi: false,
+            options: [
+                { text: "Сенат", correct: false },
+                { text: "Святейший Синод", correct: true },
+                { text: "Главный магистрат", correct: false },
+                { text: "Монастырский приказ", correct: false }
+            ]
+        },
+        {
+            text: "В какой крупной войне (1756–1763 гг.) русская армия одержала победы при Гросс-Егерсдорфе и Кунерсдорфе?",
+            multi: false,
+            options: [
+                { text: "Северная война", correct: false },
+                { text: "Крымская война", correct: false },
+                { text: "Семилетняя война", correct: true },
+                { text: "Ливонская война", correct: false }
+            ]
+        },
+        {
+            text: "Какое первое в России женское учебное заведение было основано в период правления Екатерины II?",
+            multi: false,
+            options: [
+                { text: "Высшие женские курсы", correct: false },
+                { text: "Смольный институт", correct: true },
+                { text: "Славяно-греко-латинская академия", correct: false },
+                { text: "Московский университет", correct: false }
+            ]
+        },
+        {
+            text: "Кто является автором комедий «Недоросль» и «Бригадир», ставших яркими произведениями русской литературы XVIII века?",
+            multi: false,
+            options: [
+                { text: "М.В. Ломоносов", correct: false },
+                { text: "Г.Р. Державин", correct: false },
+                { text: "Д.И. Фонвизин", correct: true },
+                { text: "Н.М. Карамзин", correct: false }
+            ]
+        },
+        {
+            text: "Кто был назначен главнокомандующим русской армией в августе 1812 года во время Отечественной войны?",
+            multi: false,
+            options: [
+                { text: "П.И. Багратион", correct: false },
+                { text: "М.Б. Барклай-де-Толли", correct: false },
+                { text: "М.И. Кутузов", correct: true },
+                { text: "А.В. Суворов", correct: false }
+            ]
+        },
+        {
+            text: "Какое тяжелое для России условие было закреплено Парижским мирным договором 1856 года после поражения в Крымской войне?",
+            multi: false,
+            options: [
+                { text: "Потеря Крымского полуострова", correct: false },
+                { text: "Выплата огромной контрибуции", correct: false },
+                { text: "Запрет держать военный флот на Черном море", correct: true },
+                { text: "Утрата выхода к Балтийскому морю", correct: false }
+            ]
+        },
+        {
+            text: "Какое важнейшее нововведение появилось в российской армии в результате военной реформы Д.А. Милютина в 1874 году?",
+            multi: false,
+            options: [
+                { text: "Введение рекрутских наборов", correct: false },
+                { text: "Создание стрелецкого войска", correct: false },
+                { text: "Введение всеобщей воинской повинности", correct: true },
+                { text: "Переход на контрактную основу", correct: false }
+            ]
+        },
+        {
+            text: "Чья речь в Государственной думе в ноябре 1916 года, содержавшая фразу «Глупость или измена?», стала символом открытого противостояния общества и правительства?",
+            multi: false,
+            options: [
+                { text: "П.А. Столыпина", correct: false },
+                { text: "П.Н. Милюкова", correct: true },
+                { text: "А.Ф. Керенского", correct: false },
+                { text: "В.И. Ленина", correct: false }
+            ]
+        },
+        {
+            text: "На каком принципе, согласно плану В.И. Ленина, был образован Союз Советских Социалистических Республик в 1922 году?",
+            multi: false,
+            options: [
+                { text: "Унитарное государство", correct: false },
+                { text: "Федерация равноправных республик", correct: true },
+                { text: "Конфедерация независимых государств", correct: false },
+                { text: "Вхождение республик в состав РСФСР на правах автономий (автономизация)", correct: false }
+            ]
+        },
+        {
+            text: "Как в исторической науке называется процесс преодоления последствий культа личности Сталина и освобождения заключенных, начавшийся после XX съезда КПСС?",
+            multi: false,
+            options: [
+                { text: "Коллективизация", correct: false },
+                { text: "Коренизация", correct: false },
+                { text: "Десталинизация", correct: true },
+                { text: "Перестройка", correct: false }
+            ]
+        },
+        {
+            text: "Какая налоговая мера, введенная в начале 2000-х годов в России, способствовала легализации доходов и экономическому росту?",
+            multi: false,
+            options: [
+                { text: "Введение подушной подати", correct: false },
+                { text: "Введение прогрессивной шкалы налогообложения", correct: false },
+                { text: "Введение плоской шкалы НДФЛ в 13%", correct: true },
+                { text: "Полная отмена налогов для малого бизнеса", correct: false }
+            ]
+        },
+        {
+            text: "За кого выдавал себя предводитель крестьянского восстания 1773–1775 гг. Емельян Пугачёв?",
+            multi: false,
+            options: [
+                { text: "За царевича Дмитрия", correct: false },
+                { text: "За \"спасшегося\" императора Петра III", correct: true },
+                { text: "За Иван VI Антоновича", correct: false },
+                { text: "За брата Екатерины II", correct: false }
+            ]
+        },
+        {
+            text: "Какие территории вошли в состав Российской империи в результате разделов Речи Посполитой в конце XVIII века?",
+            multi: true,
+            options: [
+                { text: "Правобережная Украина", correct: true },
+                { text: "Крымский полуостров", correct: false },
+                { text: "Белоруссия", correct: true },
+                { text: "Финляндия", correct: false }
+            ]
+        },
+        {
+            text: "Кто из перечисленных деятелей был выдающимся полководцем в эпоху правления Екатерины II?",
+            multi: false,
+            options: [
+                { text: "М.И. Кутузов", correct: false },
+                { text: "А.В. Суворов", correct: true },
+                { text: "П.И. Багратион", correct: false },
+                { text: "М.Д. Скобелев", correct: false }
+            ]
+        },
+        {
+            text: "Под чьим руководством в 1833 году была завершена работа по кодификации и созданию «Свода законов Российской империи»?",
+            multi: false,
+            options: [
+                { text: "А.А. Аракчеева", correct: false },
+                { text: "М.М. Сперанского", correct: true },
+                { text: "Е.Ф. Канкрина", correct: false },
+                { text: "П.Д. Киселева", correct: false }
+            ]
+        },
+        {
+            text: "Какое название получило масштабное идеологическое течение русской интеллигенции 1870-х годов, представители которого массово отправлялись в деревни для пропаганды среди крестьян?",
+            multi: false,
+            options: [
+                { text: "Марксизм", correct: false },
+                { text: "Славянофильство", correct: false },
+                { text: "Народничество", correct: true },
+                { text: "Декабризм", correct: false }
+            ]
+        },
+        {
+            text: "Какой император вошёл в историю с внешнеполитическим девизом «Россия не сердится, она сосредотачивается» и заключил союз с Францией?",
+            multi: false,
+            options: [
+                { text: "Александр I", correct: false },
+                { text: "Николай I", correct: false },
+                { text: "Александр II", correct: false },
+                { text: "Александр III", correct: true }
+            ]
+        },
+        {
+            text: "Какая политика П.А. Столыпина обеспечила около 3 млн крестьян землёй за Уралом в начале XX века?",
+            multi: false,
+            options: [
+                { text: "Введение волостных судов", correct: false },
+                { text: "Переселенческая политика", correct: true },
+                { text: "Национализация земли", correct: false },
+                { text: "Создание военных поселений", correct: false }
+            ]
+        },
+        {
+            text: "За какие достижения русский учёный И.И. Мечников был удостоен Нобелевской премии в 1908 году?",
+            multi: false,
+            options: [
+                { text: "За создание Периодической таблицы элементов", correct: false },
+                { text: "За труды по физиологии пищеварения", correct: false },
+                { text: "За труды по иммунологии", correct: true },
+                { text: "За создание неевклидовой геометрии", correct: false }
+            ]
+        },
+        {
+            text: "Как называлось художественное объединение, в которое входили И.Е. Репин, В.И. Суриков, И.Н. Крамской и А.К. Саврасов?",
+            multi: false,
+            options: [
+                { text: "Мир искусства", correct: false },
+                { text: "Товарищество передвижных художественных выставок", correct: true },
+                { text: "Могучая кучка", correct: false },
+                { text: "Бубновый валет", correct: false }
+            ]
+        },
+        {
+            text: "Какое название получил кризис и расстрел рабочей стачки на золотых приисках в 1912 году, усиливший социальное напряжение в обществе?",
+            multi: false,
+            options: [
+                { text: "Кровавое воскресенье", correct: false },
+                { text: "Ленский расстрел", correct: true },
+                { text: "Кронштадтский мятеж", correct: false },
+                { text: "Соловецкое восстание", correct: false }
+            ]
+        },
+        {
+            text: "Какой лозунг выдвинул В.И. Ленин по возвращении из эмиграции весной 1917 года?",
+            multi: false,
+            options: [
+                { text: "«Вся власть Учредительному собранию!»", correct: false },
+                { text: "«Смерть буржуазии!»", correct: false },
+                { text: "«Ни мира, ни войны!»", correct: false },
+                { text: "«Вся власть Советам!»", correct: true }
+            ]
+        },
+        {
+            text: "Что из перечисленного НЕ являлось характерной чертой политики «военного коммунизма» в годы Гражданской войны?",
+            multi: false,
+            options: [
+                { text: "Национализация промышленности", correct: false },
+                { text: "Продразвёрстка", correct: false },
+                { text: "Всеобщая трудовая повинность", correct: false },
+                { text: "Свободная частная торговля", correct: true }
+            ]
+        },
+        {
+            text: "Какой принцип государственного устройства был заложен в основу СССР при его образовании в 1922 году по настоянию В.И. Ленина?",
+            multi: false,
+            options: [
+                { text: "Федерация равноправных республик", correct: true },
+                { text: "Унитарное государство", correct: false },
+                { text: "Вхождение республик в РСФСР на правах автономий", correct: false },
+                { text: "Конфедерация независимых государств", correct: false }
+            ]
+        },
+        {
+            text: "С какой оппозиционной группировкой внутри партии И.В. Сталин боролся в 1929 году, обвинив её в «правом уклоне»?",
+            multi: false,
+            options: [
+                { text: "С Л.Д. Троцким", correct: false },
+                { text: "С Г.Е. Зиновьевым и Л.Б. Каменевым", correct: false },
+                { text: "С Н.И. Бухариным", correct: true },
+                { text: "С М.Н. Тухачевским", correct: false }
+            ]
+        },
+        {
+            text: "Какие события относятся к политике «Великого перелома» (с 1929 г.) в СССР?",
+            multi: true,
+            options: [
+                { text: "Форсированная коллективизация сельского хозяйства", correct: true },
+                { text: "Переход промышленности на хозрасчёт", correct: false },
+                { text: "Ускоренная индустриализация", correct: true },
+                { text: "Введение продналога", correct: false }
+            ]
+        },
+        {
+            text: "В каком году состоялось контрнаступление советских войск под Москвой, ставшее первым крупным поражением Германии во Второй мировой войне?",
+            multi: false,
+            options: [
+                { text: "1941 г.", correct: true },
+                { text: "1942 г.", correct: false },
+                { text: "1943 г.", correct: false },
+                { text: "1944 г.", correct: false }
+            ]
+        },
+        {
+            text: "Как называлась наступательная операция советских войск в 1944 году, в результате которой была освобождена Белоруссия?",
+            multi: false,
+            options: [
+                { text: "«Уран»", correct: false },
+                { text: "«Тайфон»", correct: false },
+                { text: "«Багратион»", correct: true },
+                { text: "«Кутузов»", correct: false }
+            ]
+        },
+        {
+            text: "Какое военное и политическое объединение socialистических стран было создано в противовес западному блоку НАТО в годы холодной войны?",
+            multi: false,
+            options: [
+                { text: "Лига Наций", correct: false },
+                { text: "Организация Варшавского договора (ОВД)", correct: true },
+                { text: "Совет Экономической Взаимопомощи (СЭВ)", correct: false },
+                { text: "Содружество Независимых Государств (СНГ)", correct: false }
+            ]
+        },
+        {
+            text: "Какая экономическая реформа проводилась в СССР в период правления Л.И. Брежнева (в середине 1960-х гг.), но в итоге была свёрнута?",
+            multi: false,
+            options: [
+                { text: "Реформа совнархозов", correct: false },
+                { text: "Реформа Косыгина (перевод предприятий на хозрасчёт)", correct: true },
+                { text: "Столыпинская аграрная реформа", correct: false },
+                { text: "Приватизация государственных предприятий", correct: false }
+            ]
+        },
+        {
+            text: "Как называлась политика открытого обсуждения социальных и исторических проблем, провозглашённая М.С. Горбачёвым в период перестройки?",
+            multi: false,
+            options: [
+                { text: "Ускорение", correct: false },
+                { text: "Разрядка", correct: false },
+                { text: "Гласность", correct: true },
+                { text: "Коренизация", correct: false }
+            ]
+        },
+        {
+            text: "Ввод советских войск в какую страну с 1979 года подорвал международный престиж СССР?",
+            multi: false,
+            options: [
+                { text: "Чехословакия", correct: false },
+                { text: "Венгрия", correct: false },
+                { text: "Афганистан", correct: true },
+                { text: "Куба", correct: false }
+            ]
+        },
+        {
+            text: "Что из перечисленного относится к последствиям политики «шоковой терапии» Е.Т. Гайдара в начале 1992 года?",
+            multi: false,
+            options: [
+                { text: "Укрепление курса рубля", correct: false },
+                { text: "Многократный рост цен и обесценивание сбережений граждан", correct: true },
+                { text: "Устранение теневой экономики", correct: false },
+                { text: "Рост промышленного производства", correct: false }
+            ]
+        },
+        {
+            text: "Чем завершился политический кризис и противостояние президента Б.Н. Ельцина с Верховным Советом 3–4 октября 1993 года?",
+            multi: false,
+            options: [
+                { text: "Отставкой Б.Н. Ельцина", correct: false },
+                { text: "Вооружённым обстрелом Белого дома и победой президентской власти", correct: true },
+                { text: "Подписанием мирного соглашения при посредничестве патриарха", correct: false },
+                { text: "Созданием коалиционного правительства", correct: false }
+            ]
+        },
+        {
+            text: "Каким документом юридически оформилась система президентской республики в современной России?",
+            multi: false,
+            options: [
+                { text: "Федеративным договором 1992 года", correct: false },
+                { text: "Конституцией РФ, принятой 12 декабря 1993 года", correct: true },
+                { text: "Беловежскими соглашениями 1991 года", correct: false },
+                { text: "Хасавюртовскими соглашениями 1996 года", correct: false }
+            ]
+        },
+        {
+            text: "Как назывался процесс массовой бесплатной передачи государственных предприятий в частные руки в России в первой половине 1990-х годов?",
+            multi: false,
+            options: [
+                { text: "Национализация", correct: false },
+                { text: "Ваучерная приватизация", correct: true },
+                { text: "Продразвёрстка", correct: false },
+                { text: "Коренизация", correct: false }
+            ]
+        },
+        {
+            text: "Какие меры были приняты В.В. Путиным в начале 2000-х годов для укрепления федерализма и центральной власти?",
+            multi: true,
+            options: [
+                { text: "Создание 7 федеральных округов", correct: true },
+                { text: "Учреждение института полномочных представителей Президента", correct: true },
+                { text: "Переход к конфедеративному устройству государства", correct: false },
+                { text: "Предоставление республикам права на выход из состава РФ", correct: false }
+            ]
+        },
+        {
+            text: "Какое название получил специальный государственный фонд, созданный в 2004 году для накопления сверхдоходов от экспорта нефти?",
+            multi: false,
+            options: [
+                { text: "Пенсионный фонд", correct: false },
+                { text: "Стабилизационный фонд", correct: true },
+                { text: "Фонд национального благосостояния", correct: false },
+                { text: "Резервный фонд", correct: false }
+            ]
+        },
+        {
+            text: "В каком году произошёл вооружённый конфликт с Грузией, завершившийся признанием независимости Южной Осетии и Абхазии со стороны России?",
+            multi: false,
+            options: [
+                { text: "2004 г.", correct: false },
+                { text: "2008 г.", correct: true },
+                { text: "2014 г.", correct: false },
+                { text: "2022 г.", correct: false }
+            ]
+        },
+        {
+            text: "Какая важная мера социальной поддержки семей с детьми была введена в России в 2007 году для стимулирования рождаемости?",
+            multi: false,
+            options: [
+                { text: "Ваучерная приватизация", correct: false },
+                { text: "Материнский капитал", correct: true },
+                { text: "Бесплатное высшее образование для всех", correct: false },
+                { text: "Отмена подоходного налога для многодетных", correct: false }
+            ]
+        },
+        {
+            text: "Какие новые территории вошли в состав Российской Федерации 30 сентября 2022 года по итогам проведённых референдумов?",
+            multi: false,
+            options: [
+                { text: "Республика Крым и Севастополь", correct: false },
+                { text: "Донецкая и Луганская Народные Республики, Запорожская и Херсонская области", correct: true },
+                { text: "Южная Осетия и Абхазия", correct: false },
+                { text: "Приднестровская Молдавская Республика", correct: false }
+            ]
+        },
+	{
+        text: "Какая битва в ходе Северной войны (1700–1721 гг.) ознаменовала переход стратегической инициативы к России после поражения под Нарвой?",
+        multi: false,
+        options: [
+            { text: "Полтавская битва", correct: false },
+            { text: "Битва при Лесной", correct: true },
+            { text: "Гангутское сражение", correct: false },
+            { text: "Гренгамское сражение", correct: false }
+        ]
+    },
+    {
+        text: "Кто из русских царей первым принял титул императора?",
+        multi: false,
+        options: [
+            { text: "Иван IV", correct: false },
+            { text: "Пётр I", correct: true },
+            { text: "Екатерина II", correct: false },
+            { text: "Александр I", correct: false }
+        ]
+    },
+    {
+        text: "Какое событие, произошедшее в 1730 году, стало попыткой ограничения самодержавия при вступлении на престол Анны Иоанновны?",
+        multi: false,
+        options: [
+            { text: "Подписание «Кондиций»", correct: true },
+            { text: "Принятие «Жалованной грамоты»", correct: false },
+            { text: "Учреждение Верховного тайного совета", correct: false },
+            { text: "Созыв Уложенной комиссии", correct: false }
+        ]
+    },
+    {
+        text: "Какой город стал новой столицей Российской империи в 1712 году?",
+        multi: false,
+        options: [
+            { text: "Москва", correct: false },
+            { text: "Санкт-Петербург", correct: true },
+            { text: "Киев", correct: false },
+            { text: "Архангельск", correct: false }
+        ]
+    },
+    {
+        text: "Кто из российских монархов в XVIII веке провёл секуляризацию церковных земель?",
+        multi: false,
+        options: [
+            { text: "Елизавета Петровна", correct: false },
+            { text: "Пётр III", correct: false },
+            { text: "Екатерина II", correct: true },
+            { text: "Анна Иоанновна", correct: false }
+        ]
+    },
+    {
+        text: "Какая международная организация была создана по инициативе Александра I после победы над Наполеоном для поддержания мира в Европе?",
+        multi: false,
+        options: [
+            { text: "НАТО", correct: false },
+            { text: "Священный союз", correct: true },
+            { text: "Антанта", correct: false },
+            { text: "Тройственный союз", correct: false }
+        ]
+    },
+    {
+        text: "Как назывались представители радикального движения 1860–1870-х годов, отрицавшие общепринятые ценности и авторитеты?",
+        multi: false,
+        options: [
+            { text: "Декабристы", correct: false },
+            { text: "Нигилисты", correct: true },
+            { text: "Западники", correct: false },
+            { text: "Славянофилы", correct: false }
+        ]
+    },
+    {
+        text: "Какая железная дорога, строительство которой началось в 1891 году, соединила центр России с Дальним Востоком?",
+        multi: false,
+        options: [
+            { text: "Турксиб", correct: false },
+            { text: "Транссибирская магистраль", correct: true },
+            { text: "Китайско-Восточная железная дорога", correct: false },
+            { text: "Бамовская магистраль", correct: false }
+        ]
+    },
+    {
+        text: "(2 правильных ответа) Какие политические партии возникли в России в начале XX века?",
+        multi: true,
+        options: [
+            { text: "РСДРП", correct: true },
+            { text: "Партия socialистов-революционеров (эсеры)", correct: true },
+            { text: "КПСС", correct: false },
+            { text: "ЛДПР", correct: false }
+        ]
+    },
+    {
+        text: "Какой документ, подписанный Николаем II 17 октября 1905 года, даровал гражданские свободы и право на созыв Думы?",
+        multi: false,
+        options: [
+            { text: "Манифест об усовершенствовании государственного порядка", correct: true },
+            { text: "Основные государственные законы", correct: false },
+            { text: "«Земельный указ»", correct: false },
+            { text: "Статус-кво", correct: false }
+        ]
+    },
+    {
+        text: "В каком городе проходили ключевые события Февральской революции 1917 года?",
+        multi: false,
+        options: [
+            { text: "Москва", correct: false },
+            { text: "Петроград", correct: true },
+            { text: "Киев", correct: false },
+            { text: "Царицын", correct: false }
+        ]
+    },
+    {
+        text: "Какая территория была утрачена Россией по условиям Брестского мира (март 1918 г.)?",
+        multi: false,
+        options: [
+            { text: "Крым", correct: false },
+            { text: "Финляндия, Прибалтика, часть Белоруссии и Украины", correct: true },
+            { text: "Кавказ", correct: false },
+            { text: "Поволжье", correct: false }
+        ]
+    },
+    {
+        text: "Как называлась политика массовых репрессий и укрепления личной власти Сталина в 1930-е годы?",
+        multi: false,
+        options: [
+            { text: "Оттепель", correct: false },
+            { text: "Сталинские репрессии (Большой террор)", correct: true },
+            { text: "Перестройка", correct: false },
+            { text: "Коллективизация", correct: false }
+        ]
+    },
+    {
+        text: "Какое государство напало на СССР 22 июня 1941 года, начав Великую Отечественную войну?",
+        multi: false,
+        options: [
+            { text: "Япония", correct: false },
+            { text: "Италия", correct: false },
+            { text: "Германия", correct: true },
+            { text: "Венгрия", correct: false }
+        ]
+    },
+    {
+        text: "Какая битва в 1942–1943 гг. стала крупнейшим сухопутным сражением Второй мировой войны и переломила её ход?",
+        multi: false,
+        options: [
+            { text: "Сталинградская битва", correct: true },
+            { text: "Битва за Москву", correct: false },
+            { text: "Курская дуга", correct: false },
+            { text: "Битва за Кавказ", correct: false }
+        ]
+    },
+    {
+        text: "Какое международное соглашение, подписанное в 1945 году, закрепило послевоенное устройство мира «Большой тройкой»?",
+        multi: false,
+        options: [
+            { text: "Версальский мир", correct: false },
+            { text: "Ялтинско-Потсдамские соглашения", correct: true },
+            { text: "Пакт Молотова-Риббентропа", correct: false },
+            { text: "Мюнхенское соглашение", correct: false }
+        ]
+    },
+    {
+        text: "Как назывался период правления Н.С. Хрущёва, характеризующийся относительной либерализацией режима?",
+        multi: false,
+        options: [
+            { text: "Застой", correct: false },
+            { text: "Оттепель", correct: true },
+            { text: "Перестройка", correct: false },
+            { text: "Стабилизация", correct: false }
+        ]
+    },
+    {
+        text: "Какая страна была главным идеологическим противником СССР в годы «холодной войны»?",
+        multi: false,
+        options: [
+            { text: "Великобритания", correct: false },
+            { text: "США", correct: true },
+            { text: "Франция", correct: false },
+            { text: "Китай", correct: false }
+        ]
+    },
+    {
+        text: "Какое событие 1962 года поставило мир на грань ядерной войны между СССР и США?",
+        multi: false,
+        options: [
+            { text: "Берлинский кризис", correct: false },
+            { text: "Карибский кризис", correct: true },
+            { text: "Корейская война", correct: false },
+            { text: "Вьетнамская война", correct: false }
+        ]
+    },
+    {
+        text: "Какое название в исторической литературе получил период правления Л.И. Брежнева из-за замедления темпов экономического роста?",
+        multi: false,
+        options: [
+            { text: "Эра просвещения", correct: false },
+            { text: "Период застоя", correct: true },
+            { text: "Время надежд", correct: false },
+            { text: "Великая рецессия", correct: false }
+        ]
+    },
+    {
+        text: "В каком году М.С. Горбачёв был избран Генеральным секретарём ЦК КПСС, что ознаменовало начало перестройки?",
+        multi: false,
+        options: [
+            { text: "1982", correct: false },
+            { text: "1985", correct: true },
+            { text: "1989", correct: false },
+            { text: "1991", correct: false }
+        ]
+    },
+    {
+        text: "Какой внешнеполитический курс провозгласил М.С. Горбачёв в годы перестройки для улучшения отношений с Западом?",
+        multi: false,
+        options: [
+            { text: "Доктрина Брежнева", correct: false },
+            { text: "«Новое мышление»", correct: true },
+            { text: "«Железный занавес»", correct: false },
+            { text: "Политику силы", correct: false }
+        ]
+    },
+    {
+        text: "Какое событие произошло 8 декабря 1991 года в Беловежской пуще?",
+        multi: false,
+        options: [
+            { text: "Принятие Конституции РФ", correct: false },
+            { text: "Подписание соглашения о прекращении существования СССР", correct: true },
+            { text: "Первый съезд народных депутатов", correct: false },
+            { text: "Начало приватизации", correct: false }
+        ]
+    },
+    {
+        text: "Как назывался высший орган законодательной власти в РФ в 1990–1993 гг., распущенный указом президента Б.Н. Ельцина?",
+        multi: false,
+        options: [
+            { text: "Государственная дума", correct: false },
+            { text: "Верховный Совет", correct: true },
+            { text: "Федеральное Собрание", correct: false },
+            { text: "Совет Федерации", correct: false }
+        ]
+    },
+    {
+        text: "Какая новая форма собственности стала массовой в 1990-е годы в результате перехода к рыночной экономике?",
+        multi: false,
+        options: [
+            { text: "Государственная", correct: false },
+            { text: "Частная", correct: true },
+            { text: "Колхозная", correct: false },
+            { text: "Общинная", correct: false }
+        ]
+    },
+    {
+        text: "Какой финансовый кризис произошёл в России в августе 1998 года?",
+        multi: false,
+        options: [
+            { text: "Дефолт", correct: true },
+            { text: "Гиперинфляция", correct: false },
+            { text: "Валютная реформа", correct: false },
+            { text: "Банковский крах", correct: false }
+        ]
+    },
+    {
+        text: "Кто был первым Президентом Российской Федерации?",
+        multi: false,
+        options: [
+            { text: "М.С. Горбачёв", correct: false },
+            { text: "Б.Н. Ельцин", correct: true },
+            { text: "В.В. Путин", correct: false },
+            { text: "Д.А. Медведев", correct: false }
+        ]
+    },
+    {
+        text: "Какой орган исполнительной власти в РФ возглавляет Председатель Правительства?",
+        multi: false,
+        options: [
+            { text: "Администрация Президента", correct: false },
+            { text: "Правительство Российской Федерации", correct: true },
+            { text: "Совет Безопасности", correct: false },
+            { text: "Министерство обороны", correct: false }
+        ]
+    },
+    {
+        text: "(2 правильных ответа) Какие события 2014 года стали ключевыми для внешней политики России?",
+        multi: true,
+        options: [
+            { text: "Присоединение Крыма", correct: true },
+            { text: "Начало работы Евразийского экономического союза", correct: true },
+            { text: "Вступление в НАТО", correct: false },
+            { text: "Выход из ООН", correct: false }
+        ]
+    },
+    {
+        text: "Как назывался основной закон Российской Федерации, принятый всенародным голосованием в 1993 году?",
+        multi: false,
+        options: [
+            { text: "Декларация о суверенитете", correct: false },
+            { text: "Конституция РФ", correct: true },
+            { text: "Гражданский кодекс", correct: false },
+            { text: "Уголовный кодекс", correct: false }
+        ]
+    },
+    {
+        text: "Какой князь первым перенёс свою резиденцию из Киева во Владимир в 1169 году, положив начало возвышению Владимиро-Суздальского княжества?",
+        multi: false,
+        options: [
+            { text: "Юрий Долгорукий", correct: false },
+            { text: "Андрей Боголюбский", correct: true },
+            { text: "Всеволод Большое Гнездо", correct: false },
+            { text: "Александр Невский", correct: false }
+        ]
+    },
+    {
+        text: "Как назывался высший орган управления в Новгородской республике, решавший вопросы войны, мира и приглашения князя?",
+        multi: false,
+        options: [
+            { text: "Боярская дума", correct: false },
+            { text: "Вече", correct: true },
+            { text: "Земский собор", correct: false },
+            { text: "Избранная рада", correct: false }
+        ]
+    },
+    {
+        text: "Какое событие 1242 года вошло в историю как «Ледовое побоище»?",
+        multi: false,
+        options: [
+            { text: "Битва с монголами на Калке", correct: false },
+            { text: "Битва с тевтонскими рыцарями на Чудском озере", correct: true },
+            { text: "Невская битва", correct: false },
+            { text: "Сражение на реке Воже", correct: false }
+        ]
+    },
+    {
+        text: "Какой московский князь первым перестал платить дань Золотой Орде, что привело к походу Тохтамыша?",
+        multi: false,
+        options: [
+            { text: "Иван Калита", correct: false },
+            { text: "Дмитрий Донской", correct: true },
+            { text: "Василиій I", correct: false },
+            { text: "Василий II", correct: false }
+        ]
+    },
+    {
+        text: "Как называлась система содержания должностных лиц (наместников, волостелей) за счёт местного населения, отмененная в середине XVI века?",
+        multi: false,
+        options: [
+            { text: "Кормление", correct: true },
+            { text: "Пожилое", correct: false },
+            { text: "Полюдье", correct: false },
+            { text: "Тягло", correct: false }
+        ]
+    },
+    {
+        text: "В каком году состоялся первый Земский собор, созванный Иваном IV?",
+        multi: false,
+        options: [
+            { text: "1547", correct: false },
+            { text: "1549", correct: true },
+            { text: "1552", correct: false },
+            { text: "1565", correct: false }
+        ]
+    },
+    {
+        text: "Какой документ, изданный в 1597 году, вводил пятилетний срок сыска беглых крестьян («урочные лета»)?",
+        multi: false,
+        options: [
+            { text: "Судебник 1497 г.", correct: false },
+            { text: "Указ об «урочных летах»", correct: true },
+            { text: "Соборное уложение 1649 г.", correct: false },
+            { text: "Манифест о вольности дворянской", correct: false }
+        ]
+    },
+    {
+        text: "Кто был избран на царство Земским собором in 1613 году, положив начало новой династии Романовых?",
+        multi: false,
+        options: [
+            { text: "Василий Шуйский", correct: false },
+            { text: "Борис Годунов", correct: false },
+            { text: "Михаил Фёдорович", correct: true },
+            { text: "Алексей Михайлович", correct: false }
+        ]
+    },
+    {
+        text: "Как назывался свод законов 1649 года, окончательно оформивший крепостное право в России?",
+        multi: false,
+        options: [
+            { text: "Судебник Ивана III", correct: false },
+            { text: "Соборное уложение", correct: true },
+            { text: "Стоглав", correct: false },
+            { text: "Артикул воинский", correct: false }
+        ]
+    },
+    {
+        text: "Какое событие церковной истории XVII века привело к расколу Русской православной церкви?",
+        multi: false,
+        options: [
+            { text: "Реформы патриарха Никона", correct: true },
+            { text: "Учреждение Синода", correct: false },
+            { text: "Введение патриаршества", correct: false },
+            { text: "Перевод богослужебных книг Кириллом и Мефодием", correct: false }
+        ]
+    },
+    {
+        text: "Как называлась политика Петра I, направленная на развитие отечественного производства и превышение экспорта над импортом?",
+        multi: true,
+        options: [
+            { text: "Протекционизм", correct: true },
+            { text: "Меркантилизм", correct: true },
+            { text: "Либерализм", correct: false },
+            { text: "Индустриализация", correct: false }
+        ]
+    },
+    {
+        text: "Какой высший государственный орган был создан Петром I в 1711 году для управления страной в его отсутствие?",
+        multi: false,
+        options: [
+            { text: "Боярская дума", correct: false },
+            { text: "Правительствующий Сенат", correct: true },
+            { text: "Верховный тайный совет", correct: false },
+            { text: "Государственный совет", correct: false }
+        ]
+    },
+    {
+        text: "По условиям какого мира Россия получила выход к Балтийскому морю в 1721 году?",
+        multi: false,
+        options: [
+            { text: "Прутский мир", correct: false },
+            { text: "Ништадтский мир", correct: true },
+            { text: "Бахчисарайский мир", correct: false },
+            { text: "Константинопольский мир", correct: false }
+        ]
+    },
+    {
+        text: "Как назывался период в истории России (1725–1762 гг.), характеризующийся частой сменой правителей в результате дворцовых переворотов?",
+        multi: false,
+        options: [
+            { text: "Смутное время", correct: false },
+            { text: "Эпоха дворцовых переворотов", correct: true },
+            { text: "Бироновщина", correct: false },
+            { text: "Просвещенный абсолютизм", correct: false }
+        ]
+    },
+    {
+        text: "Кто из перечисленных монархов провозгласил политику «просвещенного абсолютизма»?",
+        multi: false,
+        options: [
+            { text: "Екатерина I", correct: false },
+            { text: "Анна Иоанновна", correct: false },
+            { text: "Екатерина II", correct: true },
+            { text: "Павел I", correct: false }
+        ]
+    },
+    {
+        text: "Какое событие 1801 года привело к воцарению Александра I?",
+        multi: false,
+        options: [
+            { text: "Восстание декабристов", correct: false },
+            { text: "Убийство Павла I в результате заговора", correct: true },
+            { text: "Смерть Екатерины II", correct: false },
+            { text: "Отмена крепостного права", correct: false }
+        ]
+    },
+    {
+        text: "В каком году было учреждено министерство народного просвещения и созданы университеты в рамках реформ Александра I?",
+        multi: false,
+        options: [
+            { text: "1802", correct: true },
+            { text: "1810", correct: false },
+            { text: "1825", correct: false },
+            { text: "1861", correct: false }
+        ]
+    },
+    {
+        text: "Кто был идеологом и лидером Южного общества декабристов?",
+        multi: false,
+        options: [
+            { text: "Н.М. Муравьев", correct: false },
+            { text: "П.И. Пестель", correct: true },
+            { text: "К.Ф. Рылеев", correct: false },
+            { text: "П.Г. Каховский", correct: false }
+        ]
+    },
+    {
+        text: "Как называлась концепция Николая I, основанная на триаде «Православие, Самодержавие, Народность»?",
+        multi: false,
+        options: [
+            { text: "Теория официальной народности", correct: true },
+            { text: "Славянофильство", correct: false },
+            { text: "Западничество", correct: false },
+            { text: "Революционный демократизм", correct: false }
+        ]
+    },
+    {
+        text: "Какая оборона в ходе Крымской войны (1853–1856 гг.) стала символом мужества русских солдат?",
+        multi: false,
+        options: [
+            { text: "Оборона Севастополя", correct: true },
+            { text: "Оборона Порт-Артура", correct: false },
+            { text: "Блокада Ленинграда", correct: false },
+            { text: "Оборона Брестской крепости", correct: false }
+        ]
+    },
+    {
+        text: "(2 правильных ответа) Какие органы местного самоуправления были введены Земской реформой 1864 года?",
+        multi: true,
+        options: [
+            { text: "Земские управы", correct: true },
+            { text: "Земские собрания", correct: true },
+            { text: "Городские думы", correct: false },
+            { text: "Крестьянские общины", correct: false }
+        ]
+    },
+    {
+        text: "Как назывался документ, предоставлявший дворянам право не служить государству, изданный Петром III в 1762 году?",
+        multi: false,
+        options: [
+            { text: "Жалованная грамота дворянству", correct: false },
+            { text: "Манифест о вольности дворянской", correct: true },
+            { text: "Табель о рангах", correct: false },
+            { text: "Указ о единонаследии", correct: false }
+        ]
+    },
+    {
+        text: "Какое событие 1896 года во время коронации Николая II стало трагедией, омрачившей начало его царствования?",
+        multi: false,
+        options: [
+            { text: "Кровавое воскресенье", correct: false },
+            { text: "Ходынская катастрофа", correct: true },
+            { text: "Ленский расстрел", correct: false },
+            { text: "Пожар в Зимнем дворце", correct: false }
+        ]
+    },
+    {
+        text: "Кто был автором аграрной реформы, начатой в 1906 году, целью которой было создание слоя крестьян-собственников?",
+        multi: false,
+        options: [
+            { text: "С.Ю. Витте", correct: false },
+            { text: "П.А. Столыпин", correct: true },
+            { text: "А.И. Гучков", correct: false },
+            { text: "В.Н. Коковцов", correct: false }
+        ]
+    },
+    {
+        text: "Как называлась общественная организация, созданная в 1915 году для помощи правительству в снабжении армии?",
+        multi: false,
+        options: [
+            { text: "Земгор", correct: true },
+            { text: "Прогрессивный блок", correct: false },
+            { text: "Временное правительство", correct: false },
+            { text: "Учредительное собрание", correct: false }
+        ]
+    },
+    {
+        text: "В каком году состоялся II Всероссийский съезд Советов, провозгласивший переход власти к Советам?",
+        multi: false,
+        options: [
+            { text: "1917", correct: true },
+            { text: "1918", correct: false },
+            { text: "1920", correct: false },
+            { text: "1922", correct: false }
+        ]
+    },
+    {
+        text: "Какая экономическая политика пришла на смену «военному коммунизму» в 1921 году?",
+        multi: false,
+        options: [
+            { text: "Индустриализация", correct: false },
+            { text: "НЭП (Новая экономическая политика)", correct: true },
+            { text: "Коллективизация", correct: false },
+            { text: "Продразверстка", correct: false }
+        ]
+    },
+    {
+        text: "Какая страна была исключена из Лиги Наций в 1939 году за нападение на Финляндию?",
+        multi: false,
+        options: [
+            { text: "Германия", correct: false },
+            { text: "СССР", correct: true },
+            { text: "Италия", correct: false },
+            { text: "Япония", correct: false }
+        ]
+    },
+    {
+        text: "(2 правильных ответа) Какие страны входили в состав «Большой тройки» antiгитлеровской коалиции?",
+        multi: true,
+        options: [
+            { text: "СССР", correct: true },
+            { text: "США", correct: true },
+            { text: "Франция", correct: false },
+            { text: "Италия", correct: false }
+        ]
+    },
+    {
+        text: "Как называлась программа экономической помощи США странам Европы после Второй мировой войны, от которой СССР отказался?",
+        multi: false,
+        options: [
+            { text: "План Маршалла", correct: true },
+            { text: "План Дауэса", correct: false },
+            { text: "Доктрина Трумэна", correct: false },
+            { text: "Ленд-лиз", correct: false }
+        ]
+    }
+];
+
+    let selectedQuestions = [];
+    let currentQuestion = 0;
+    const QUESTIONS_LIMIT = 20; // Максимальное количество вопросов в одном тесте
+
+    // Функция для перемешивания массива (алгоритм Фишера — Йетса)
+    function shuffleArray(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    // Функция запуска теста по клику на кнопку титульной страницы
+    function startQuiz() {
+        document.getElementById('welcome-screen').style.display = 'none';
+        document.getElementById('nav-panel').style.display = 'flex';
+        initQuiz();
+    }
+
+    function initQuiz() {
+        // Копируем исходный массив, перемешиваем его и берем первые 20 элементов (или меньше, если их пока нет 20)
+        selectedQuestions = shuffleArray([...questionsPool]).slice(0, QUESTIONS_LIMIT);
+        
+        const container = document.getElementById('quiz-container');
+        let html = '';
+
+        selectedQuestions.forEach((q, qIndex) => {
+            const type = q.multi ? 'checkbox' : 'radio';
+            const name = 'q' + qIndex;
+            html += `<div class="question-block" id="block-${qIndex}">`;
+            html += `<h3>${qIndex + 1}. ${q.text}</h3>`;
+            q.options.forEach((opt, oIndex) => {
+                html += `
+                    <label class="option">
+                        <input type="${type}" name="${name}" data-correct="${opt.correct}">
+                        ${opt.text}
+                    </label>`;
+            });
+            html += `</div>`;
+        });
+
+        container.innerHTML = html;
+        updateQuizView();
+    }
+
+    function updateQuizView() {
+        const blocks = document.querySelectorAll('.question-block');
+        
+        // Показываем только текущий вопрос
+        blocks.forEach((block, index) => {
+            block.style.display = (index === currentQuestion) ? 'block' : 'none';
+        });
+
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        // Управляем видимостью кнопки "Назад"
+        prevBtn.style.visibility = (currentQuestion === 0) ? 'hidden' : 'visible';
+        
+        // Меняем текст кнопки на последнем вопросе
+        if (currentQuestion === selectedQuestions.length - 1) {
+            nextBtn.innerText = 'Проверить результаты';
+        } else {
+            nextBtn.innerText = 'Далее';
+        }
+    }
+
+    function changeQuestion(step) {
+        if (step === 1 && currentQuestion === selectedQuestions.length - 1) {
+            checkAnswers();
+            return;
+        }
+        
+        currentQuestion += step;
+        updateQuizView();
+    }
+
+    function checkAnswers() {
+        let score = 0;
+        const blocks = document.querySelectorAll('.question-block');
+
+        blocks.forEach(block => {
+            const inputs = block.querySelectorAll('input');
+            let isBlockCorrect = true;
+
+            inputs.forEach(input => {
+                const isCorrect = input.dataset.correct === 'true';
+                const isChecked = input.checked;
+                const label = input.parentElement;
+                label.classList.remove('correct', 'incorrect');
+
+                if (isCorrect) {
+                    label.classList.add('correct');
+                }
+                if (isChecked && !isCorrect) {
+                    label.classList.add('incorrect');
+                }
+                if (isCorrect !== isChecked) {
+                    isBlockCorrect = false;
+                }
+            });
+
+            if (isBlockCorrect) score++;
+        });
+
+        const total = selectedQuestions.length;
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerText = `Ваш результат: ${score} из ${total} правильных ответов!`;
+        resultsDiv.style.display = 'block';
+
+        if (score === total) {
+            resultsDiv.style.backgroundColor = '#d4edda';
+            resultsDiv.style.color = '#155724';
+        } else if (score >= total / 2) {
+            resultsDiv.style.backgroundColor = '#fff3cd';
+            resultsDiv.style.color = '#856404';
+        } else {
+            resultsDiv.style.backgroundColor = '#f8d7da';
+            resultsDiv.style.color = '#721c24';
+        }
+
+        // Показываем все блоки с вопросами и скрываем навигацию для разбора ошибок
+        blocks.forEach(block => block.style.display = 'block');
+        document.getElementById('nav-panel').style.display = 'none';
+
+        resultsDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+</body>
+</html>
