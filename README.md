@@ -5,3 +5,4 @@ t.me/bruhbrn
 https://bruhbourne.github.io/istoria-testik.html
 
 ТГП
+https://bruhbourne.github.io/tgp-testik.html
