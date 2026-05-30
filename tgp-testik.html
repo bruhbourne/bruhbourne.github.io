@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тест по ТГП</title>
+<style>
+/* --- СТИЛИ --- */
+body { margin: 0; padding: 0; background: #111; color: #eee; font-family: Arial, sans-serif; }
+header { padding: 30px 20px; text-align: center; border-bottom: 1px solid #333; background: #1a1a1a; }
+h1 { margin: 0; font-size: 32px; }
+.creator { margin-top: 10px; color: #999; }
+.container { max-width: 800px; margin: 40px auto; padding: 20px; }
+.card { background: #1a1a1a; border: 1px solid #2f2f2f; border-radius: 12px; padding: 30px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+.question-counter { color: #888; font-size: 14px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+.question-text { font-size: 20px; line-height: 1.5; margin-bottom: 25px; font-weight: bold; }
+.options { display: flex; flex-direction: column; gap: 12px; }
+.option-label { display: flex; align-items: flex-start; background: #222; padding: 15px; border-radius: 8px; cursor: pointer; border: 1px solid #333; transition: background 0.2s; }
+.option-label:hover { background: #2a2a2a; }
+.option-label input { margin-top: 4px; margin-right: 15px; transform: scale(1.2); cursor: pointer; }
+.btn { margin-top: 25px; background: #fff; color: #000; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: background 0.2s; }
+.btn:hover { background: #ddd; }
+.btn:disabled { background: #555; color: #888; cursor: not-allowed; }
+.feedback { margin-top: 20px; padding: 15px; border-radius: 8px; font-size: 16px; display: none; }
+.feedback.correct { display: block; background: rgba(76, 175, 80, 0.1); color: #4CAF50; border: 1px solid #4CAF50; }
+.feedback.incorrect { display: block; background: rgba(244, 67, 54, 0.1); color: #F44336; border: 1px solid #F44336; }
+.correct-answers-list { margin-top: 10px; color: #fff; font-weight: normal; }
+.option-label.is-correct { background: rgba(76, 175, 80, 0.15); border-color: #4CAF50; color: #4CAF50; font-weight: bold; }
+.option-label.is-wrong { background: rgba(244, 67, 54, 0.15); border-color: #F44336; color: #F44336; text-decoration: line-through; }
+.results-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1a1a1a; font-size: 14px; }
+.results-table th, .results-table td { border: 1px solid #333; padding: 12px; text-align: left; }
+.results-table th { background: #222; color: #ccc; }
+.res-correct { color: #4CAF50; font-weight: bold; }
+.res-incorrect { color: #F44336; font-weight: bold; }
+.score-board { text-align: center; font-size: 24px; margin-bottom: 30px; padding: 20px; background: #222; border-radius: 12px; }
+footer { text-align: center; padding: 30px; color: #777; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Тест по ТГП</h1>
+</header>
+
+<div class="container">
+    <div id="start-screen" class="card" style="text-align: center;">
+        <h2>Добро пожаловать в режим тестирования!</h2>
+        <p style="color: #bbb; line-height: 1.6; margin-bottom: 25px;">
+            За одну попытку выпадают рандомные 35 вопросов из 301.<br>
+        </p>
+        <button class="btn" onclick="startQuiz()">Начать тест</button>
+    </div>
+
+    <div id="quiz-screen" style="display: none;">
+        <div class="card">
+            <div class="question-counter" id="q-counter">Вопрос 1 из 35</div>
+            <div class="question-text" id="q-text">Текст вопроса</div>
+            <div class="options" id="q-options"></div>
+            <div id="feedback" class="feedback"></div>
+            <button class="btn" id="submit-btn" onclick="checkAnswer()">Ответить</button>
+            <button class="btn" id="next-btn" style="display: none;" onclick="nextQuestion()">Следующий вопрос</button>
+        </div>
+    </div>
+
+    <div id="results-screen" style="display: none;">
+        <div class="score-board" id="score-board"></div>
+        <button class="btn" onclick="location.reload()" style="margin-bottom: 20px;">Пройти заново</button>
+        <div style="overflow-x: auto;">
+            <table class="results-table">
+                <thead>
+                    <tr><th>№</th><th>Вопрос</th><th>Ваш ответ</th><th>Правильный ответ</th><th>Результат</th></tr>
+                </thead>
+                <tbody id="results-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="data-store" style="display: none;"></div>
+
+<script>
+// ==========================================
+// ШАГ 2: ВСТАВЬТЕ ВСЕ 301 ВОПРОС СЮДА
+// ==========================================
+const rawHTMLData = `
+
+<div class="card"><div class="question">1. Граждане государства, обладающие активным избирательным правом называются:</div><div class="answer"><ul><li>"электор* "</li></ul></div></div>
+        <div class="card"><div class="question">2. В рамках какой теории государство рассматривается как машина для поддержания господства одного класса над другим:</div><div class="answer"><ul><li>марксистской;</li></ul></div></div>
+        <div class="card"><div class="question">3. Признаками государства являются: (пометить 4)</div><div class="answer"><ul><li>суверенитет;</li><li>наличие права;</li><li>налоговая система;</li><li>население;</li></ul></div></div>
+        <div class="card"><div class="question">4. Публичность власти в государстве означает: (пометить 3)</div><div class="answer"><ul><li>отделённость государственной власти от общества;</li><li>наличие специального аппарата управления и принуждения;</li><li>представление общества во взаимоотношениях с другими государствами;</li></ul></div></div>
+        <div class="card"><div class="question">5. В соответствии с марксистско-ленинской теорией общественно-экономических формаций государства подразделяются на (указать 4):</div><div class="answer"><ul><li>феодальные;</li><li>рабовладельческие;</li><li>буржуазные;</li><li>социалистические.</li></ul></div></div>
+        <div class="card"><div class="question">6. Взаимосвязь права и государства проявляется в том, что (пометить 4):</div><div class="answer"><ul><li>в правовых нормах предусматривается порядок создания и деятельности государственных органов и должностных лиц;</li><li>государство закрепляет нормы права в нормативно-правовых актах;</li><li>в правовых нормах закрепляется компетенция государственных органов и должностных лиц;</li><li>государство гарантирует осуществление правовых норм.</li></ul></div></div>
+        <div class="card"><div class="question">7. Формы осуществления функций государства в теории государства и права принято делить на (пометить 2):</div><div class="answer"><ul><li>правовые;</li><li>организационные;</li></ul></div></div>
+        <div class="card"><div class="question">8. К внешним функциям государства относятся ( указать 2):</div><div class="answer"><ul><li>оборона страны;</li><li>обеспечение мира;</li></ul></div></div>
+        <div class="card"><div class="question">9. Охрана природы и окружающей среды является:</div><div class="answer"><ul><li>экологической функцией государства;</li></ul></div></div>
+        <div class="card"><div class="question">10. К исполнительным органам государства относятся: (пометить 3)</div><div class="answer"><ul><li>Правительство;</li><li>Министерство;</li><li>Премьер-министр;</li></ul></div></div>
+        <div class="card"><div class="question">11. Органы государства по связи с электоратом бывают: (пометить 2)</div><div class="answer"><ul><li>Первичными;</li><li>Производными;</li></ul></div></div>
+        <div class="card"><div class="question">12. В соответствии с принципом разделения властей органы государства делятся на:</div><div class="answer"><ul><li>судебные;</li><li>исполнительные;</li><li>законодательные;</li></ul></div></div>
+        <div class="card"><div class="question">13. Органы государства по объему компетенции бывают (указать 2):</div><div class="answer"><ul><li>Общей компетенции;</li><li>Специальными;</li></ul></div></div>
+        <div class="card"><div class="question">14. Круг полномочий государственного органа, объем его прав и обязанностей называется:</div><div class="answer"><ul><li>компетенцией;</li></ul></div></div>
+        <div class="card"><div class="question">15. Укажите два вида органов государства, не допуская логическую ошибку «подмена основания деления»:</div><div class="answer"><ul><li>единоличные;</li><li>коллегиальные;</li></ul></div></div>
+        <div class="card"><div class="question">16. Государства по территориальному устройству делятся на (указать 2):</div><div class="answer"><ul><li>федеративные;</li><li>унитарные;</li></ul></div></div>
+        <div class="card"><div class="question">17. Признаками президентской республики являются: (пометить 3)</div><div class="answer"><ul><li>избираемость президента электоратом;</li><li>исполнение президентом функции главы государства и главы правительства;</li><li>формирование правительства президентом;</li></ul></div></div>
+        <div class="card"><div class="question">18. Федеративные государства принято классифицировать по:</div><div class="answer"><ul><li>национальному принципу;</li><li>территориальному принципу;</li></ul></div></div>
+        <div class="card"><div class="question">19. Признаками монархической формы правления являются (пометить 2):</div><div class="answer"><ul><li>передача поста главы государства путем наследования;</li><li>непредусмотренность юридической ответственности для главы государства;</li></ul></div></div>
+        <div class="card"><div class="question">20. Государства по политическому режиму бывают (указать 3):</div><div class="answer"><ul><li>тоталитарными;</li><li>социал-демократическими;</li><li>расистскими;</li></ul></div></div>
+        <div class="card"><div class="question">21. Виды государств по форме правления:</div><div class="answer"><ul><li>республики;</li><li>монархии;</li></ul></div></div>
+        <div class="card"><div class="question">22. Укажите виды государств по форме устройства:</div><div class="answer"><ul><li>унитарные;</li><li>федеративные;</li></ul></div></div>
+        <div class="card"><div class="question">23. Общий характер правовых норм означает, что они:</div><div class="answer"><ul><li>не персонифицированы;</li></ul></div></div>
+        <div class="card"><div class="question">24. Системность права означает:</div><div class="answer"><ul><li>взаимосвязь и взаимодействие его элементов;</li></ul></div></div>
+        <div class="card"><div class="question">25. Понимание права как меры свободы человека в обществе характерно для:</div><div class="answer"><ul><li>теории естественного права;</li></ul></div></div>
+        <div class="card"><div class="question">26. Понятие “норма” является основополагающим для:</div><div class="answer"><ul><li>правового позитивизма;</li></ul></div></div>
+        <div class="card"><div class="question">27. К признакам норм морали относятся:</div><div class="answer"><ul><li>их общеобязательный характер;</li></ul></div></div>
+        <div class="card"><div class="question">28. К признакам права относятся (указать 3):</div><div class="answer"><ul><li>нормативность;</li><li>системность;</li><li>формальная определённость;</li></ul></div></div>
+        <div class="card"><div class="question">29. Формальная определенность норм права означает: (пометить 2)</div><div class="answer"><ul><li>закрепление норм в письменной форме;</li><li>четкость и ясность формулировок;</li></ul></div></div>
+        <div class="card"><div class="question">30. Функциями права являются:</div><div class="answer"><ul><li>регулятивная;</li><li>охранительная;</li></ul></div></div>
+        <div class="card"><div class="question">31. Термином "юридическая техника" обозначаются:</div><div class="answer"><ul><li>правила, средства, приемы разработки, оформления и систематизации нормативных и правоприменительных актов;</li></ul></div></div>
+        <div class="card"><div class="question">32. Нормативно-правовой акт является основным источником права в:</div><div class="answer"><ul><li>в романо-германской правовой системе;</li></ul></div></div>
+        <div class="card"><div class="question">33. Законы отличаются от подзаконных нормативно-правовых актов:</div><div class="answer"><ul><li>юридической силой;</li></ul></div></div>
+        <div class="card"><div class="question">34. «Обратная сила нормативно-правового акта» означает распространение его действия на:</div><div class="answer"><ul><li>отношения, которые возникли до вступления данного нормативно-правового акта в юридическую силу;</li></ul></div></div>
+        <div class="card"><div class="question">35. Преамбула Конституции РФ это:</div><div class="answer"><ul><li>её вступительная часть;</li></ul></div></div>
+        <div class="card"><div class="question">36. Кодификация как вид систематизации нормативно-правовых актов отличается от инкорпорации тем, что: (пометить 2):</div><div class="answer"><ul><li>осуществляется только органами с правотворческой компетенцией;</li><li>позволяет изменять содержание правовых норм;</li></ul></div></div>
+        <div class="card"><div class="question">37. Объединение действующих нормативно-правовых положений происходит в ходе систематизации нормативно-правовых актов следующих видов (указать 2):</div><div class="answer"><ul><li>консолидация;</li><li>инкорпорация;</li></ul></div></div>
+        <div class="card"><div class="question">38. Видами систематизации нормативно-правовых актов являются (пометить 3):</div><div class="answer"><ul><li>кодификация;</li><li>инкорпорация;</li><li>консолидация;</li></ul></div></div>
+        <div class="card"><div class="question">39. К подзаконным нормативно-правовым актам относятся:</div><div class="answer"><ul><li>постановления правительства РФ;</li><li>указы президента РФ;</li><li>акты представительных органов местного самоуправления;</li></ul></div></div>
+        <div class="card"><div class="question">40. Источниками официального опубликования Федеральных конституционных законов и Федеральных законов в Российской Федерации являются:</div><div class="answer"><ul><li>Собрание законодательства РФ;</li><li>Парламентская газета;</li><li>Российская газета;</li></ul></div></div>
+        <div class="card"><div class="question">41. Дефинитивными нормами называются те, которые:</div><div class="answer"><ul><li>содержат определения юридических понятий;</li></ul></div></div>
+        <div class="card"><div class="question">42. Санкция правовой нормы это:</div><div class="answer"><ul><li>указание на юридические последствия соблюдения или несоблюдения предписаний диспозиции нормы;</li></ul></div></div>
+        <div class="card"><div class="question">43. Наличие карательных мер государственно-правового принуждения характерно для:</div><div class="answer"><ul><li>охранительных норм;</li></ul></div></div>
+        <div class="card"><div class="question">44. «Судьи независимы и подчиняются только закону». Эта норма:</div><div class="answer"><ul><li>декларативная;</li></ul></div></div>
+        <div class="card"><div class="question">45. Норма права имеет трехчленную структуру, если она:</div><div class="answer"><ul><li>является логически безупречным правилом поведения;</li></ul></div></div>
+        <div class="card"><div class="question">46. В юридическом языке термин «диспозиция» означает:</div><div class="answer"><ul><li>структурный элемент нормы права;</li></ul></div></div>
+        <div class="card"><div class="question">47. Дефинитивная норма права – это:</div><div class="answer"><ul><li>определение правового явления, зафиксированное в нормативно-правовом акте;</li></ul></div></div>
+        <div class="card"><div class="question">48. По роли в правовом регулировании нормы права делятся на :</div><div class="answer"><ul><li>регулятивные;</li><li>охранительные;</li></ul></div></div>
+        <div class="card"><div class="question">49. По степени категоричности предписания нормы права делятся на:</div><div class="answer"><ul><li>диспозитивные;</li><li>императивные;</li></ul></div></div>
+        <div class="card"><div class="question">50. К принципам законности относятся (пометить 3):</div><div class="answer"><ul><li>единство законности;</li><li>всеобщность законности;</li><li>юридическое равенство всех субъектов права;</li></ul></div></div>
+        <div class="card"><div class="question">51. Дееспособность физических лиц наступает:</div><div class="answer"><ul><li>по достижении возраста, указанного в законе;</li></ul></div></div>
+        <div class="card"><div class="question">52. Правоспособность это:</div><div class="answer"><ul><li>способность иметь юридические права и обязанности;</li></ul></div></div>
+        <div class="card"><div class="question">53. Если физическое лицо может самостоятельно и осознанно приобретать и реализовать субъективные права и юридические обязанности, то оно считается:</div><div class="answer"><ul><li>дееспособным;</li></ul></div></div>
+        <div class="card"><div class="question">54. Предусмотренная правовыми нормами способность нести ответственность за совершенное правонарушение это:</div><div class="answer"><ul><li>деликтоспособность;</li></ul></div></div>
+        <div class="card"><div class="question">55. Структурными элементами правоотношения являются (указать 3):</div><div class="answer"><ul><li>субъект;</li><li>объект;</li><li>содержание;</li></ul></div></div>
+        <div class="card"><div class="question">56. Реальные жизненные обстоятельства, с которыми нормы права связывают наступление юридических последствий – это:</div><div class="answer"><ul><li>"юридич* факт*.</li></ul></div></div>
+        <div class="card"><div class="question">57. Субъектами права могут быть:</div><div class="answer"><ul><li>иностранцы;</li><li>отдельные члены общества;</li><li>чиновники государственного аппарата;</li></ul></div></div>
+        <div class="card"><div class="question">58. Объектами правоотношения могут выступать :</div><div class="answer"><ul><li>вещи;</li><li>личные неимущественные блага;</li><li>действия, порождающие юридически значимый результат;</li></ul></div></div>
+        <div class="card"><div class="question">59. Юридическими фактами являются:</div><div class="answer"><ul><li>стихийные силы природы;</li><li>действия людей, не преследующие юридических целей;</li><li>противоправные действия людей;</li><li>действия животных, причинившие вред людям;</li></ul></div></div>
+        <div class="card"><div class="question">60. Юридические лица – это:</div><div class="answer"><ul><li>организации – участники имущественных отношений, обладающие признаками, предусмотренными гражданским законодательством;</li></ul></div></div>
+        <div class="card"><div class="question">61. Состав правонарушения включает в себя:</div><div class="answer"><ul><li>четыре элемента;</li></ul></div></div>
+        <div class="card"><div class="question">62. Психологическое отношение правонарушителя к своему противоправному и социально неприемлемому поведению является:</div><div class="answer"><ul><li>субъективной стороной правонарушения;</li></ul></div></div>
+        <div class="card"><div class="question">63. Место, время и способ совершения правонарушения относятся к:</div><div class="answer"><ul><li>объективной стороне правонарушения;</li></ul></div></div>
+        <div class="card"><div class="question">64. Правильным перечнем видов правомерного поведения в зависимости от форм реализации права является следующий:</div><div class="answer"><ul><li>исполнение, использование, соблюдение;</li></ul></div></div>
+        <div class="card"><div class="question">65. Совокупность объективных и субъективных признаков, необходимых и достаточных для характеристики деяния как правонарушения это:</div><div class="answer"><ul><li>состав правонарушения;</li></ul></div></div>
+        <div class="card"><div class="question">66. Видами правонарушений являются (указать 4):</div><div class="answer"><ul><li>преступление;</li><li>административный проступок;</li><li>дисциплинарный проступок;</li><li>гражданско-правовой деликт;</li></ul></div></div>
+        <div class="card"><div class="question">67. Видами наказания за совершенное правонарушение являются (указать 3):</div><div class="answer"><ul><li>лишение свободы;</li><li>штраф;</li><li>конфискация имущества;</li></ul></div></div>
+        <div class="card"><div class="question">68. Юридическая ответственность может пониматься как: ( пометить 3)</div><div class="answer"><ul><li>мера государственно-правового принуждения;</li><li>реализация санкций карательных норм;</li><li>необходимое последствие совершённого правонарушения;</li></ul></div></div>
+        <div class="card"><div class="question">69. "Запрещено всё, кроме прямо разрешённого законом." Это принцип:</div><div class="answer"><ul><li>разрешительного типа регулирования;</li></ul></div></div>
+        <div class="card"><div class="question">70. Система юридических средств, при помощи которых осуществляется правовое регулирование, именуется:</div><div class="answer"><ul><li>"механизм* правового *регулирования ".</li></ul></div></div>
+        <div class="card"><div class="question">71. "Разрешено всё, кроме прямо запрещённого законом". Это:</div><div class="answer"><ul><li>общедозволительный тип правового регулирования;</li></ul></div></div>
+        <div class="card"><div class="question">72. Метод правового регулирования, основанный на предоставлении субъектам права возможности выбора вариантов поведения называется:</div><div class="answer"><ul><li>диспозитивным;</li></ul></div></div>
+        <div class="card"><div class="question">73. Разрешительный тип правового регулирования выражается формулами:</div><div class="answer"><ul><li>«запрещено все, кроме прямо разрешенного»;</li></ul></div></div>
+        <div class="card"><div class="question">74. В механизм правового регулирования включаются:</div><div class="answer"><ul><li>правовые отношения;</li></ul></div></div>
+        <div class="card"><div class="question">75. Способами правового регулирования являются:</div><div class="answer"><ul><li>предоставление субъективных прав;</li><li>установление запретов;</li><li>возложение обязанностей;</li></ul></div></div>
+        <div class="card"><div class="question">76. Стадиями правового регулирования являются:</div><div class="answer"><ul><li>создание норм права;</li><li>индивидуализация и конкретизация юридических прав и обязанностей в правоотношении;</li><li>реализация прав и обязанностей субъектами правоотношений;</li></ul></div></div>
+        <div class="card"><div class="question">77. Признаками правового регулирования являются:</div><div class="answer"><ul><li>воздействие на поведение людей в общественных отношениях;</li><li>воздействие с помощью правовых (юридических) средств;</li><li>целенаправленное воздействие;</li></ul></div></div>
+        <div class="card"><div class="question">78. Преодоление пробела в праве путем применения нормы права, регулирующей сходные правоотношения, называется:</div><div class="answer"><ul><li>аналогией закона;</li></ul></div></div>
+        <div class="card"><div class="question">79. Преодоление пробела путем применения аналогии недопустимо в:</div><div class="answer"><ul><li>уголовном праве;</li></ul></div></div>
+        <div class="card"><div class="question">80. Реализация права это:</div><div class="answer"><ul><li>претворение предписаний правовых норм в поведении участников правовых отношений;</li><li>Юридическая квалификация – это</li><li>анализ фактических обстоятельств дела и выбор соответствующей нормы права;</li></ul></div></div>
+        <div class="card"><div class="question">81. С помощью аналогии права:</div><div class="answer"><ul><li>осуществляется преодоление пробела в праве путем применения общих принципов права;</li></ul></div></div>
+        <div class="card"><div class="question">82. Видами правовых норм, реализуемых путем соблюдения являются:</div><div class="answer"><ul><li>запрещающие;</li></ul></div></div>
+        <div class="card"><div class="question">83. Вид правовых норм, реализуемых путем исполнения:</div><div class="answer"><ul><li>обязывающие;</li></ul></div></div>
+        <div class="card"><div class="question">84. Укажите основное отличие акта применения права от нормативного акта:</div><div class="answer"><ul><li>индивидуально-конкретный характер;</li></ul></div></div>
+        <div class="card"><div class="question">85. Признаками правоприменительного акта являются (пометить 4):</div><div class="answer"><ul><li>наступление юридических последствий;</li><li>издание компетентными органами или лицами;</li><li>направленность на реализацию юридических норм;</li><li>обеспеченность государственным принуждением;</li></ul></div></div>
+        <div class="card"><div class="question">86. К формам непосредственной реализации права относятся (указать 3):</div><div class="answer"><ul><li>использование предоставленных прав;</li><li>соблюдение установленных в правовых нормах запретов;</li><li>исполнение юридических обязанностей;</li></ul></div></div>
+        <div class="card"><div class="question">87. Примерами актов применения права являются:</div><div class="answer"><ul><li>приговор суда по уголовному делу;</li><li>приказ руководителя предприятия о приеме на работу;</li><li>Указ Президента о назначении на должность министра;</li></ul></div></div>
+        <div class="card"><div class="question">88. Правопорядок следует понимать как: (пометить 3)</div><div class="answer"><ul><li>реализацию требований законности;</li><li>часть общественного порядка;</li><li>реализацию правовых предписаний в жизни общества;</li></ul></div></div>
+        <div class="card"><div class="question">89. Законность понимается как (пометить 3):</div><div class="answer"><ul><li>требование неукоснительного соблюдения всех норм действующего законодательства;</li><li>правовой режим жизни общества;</li><li>требование безусловной защиты и реального обеспечения прав и свобод субъектов права;</li></ul></div></div>
+        <div class="card"><div class="question">90. Укажите виды гарантий законности (пометить 3):</div><div class="answer"><ul><li>экономические;</li><li>политические;</li><li>специально-юридические;</li></ul></div></div>
+        <div class="card"><div class="question">91. Требованиями законности являются (пометить 2):</div><div class="answer"><ul><li>верховенство закона;</li><li>равенство всех перед законом;</li></ul></div></div>
+        <div class="card"><div class="question">92. К юридическим гарантиям законности можно отнести (пометить 3):</div><div class="answer"><ul><li>юридическая ответственность;</li><li>меры пресечения правонарушений;</li><li>меры защиты субъективных прав;</li></ul></div></div>
+        <div class="card"><div class="question">93. Укажите на верное соотношение понятий «правопорядок» и «общественный порядок»:</div><div class="answer"><ul><li>правопорядок часть общественного порядка;</li></ul></div></div>
+        <div class="card"><div class="question">94. Признаками правосознания являются:</div><div class="answer"><ul><li>рациональное отношение людей к праву;</li><li>совокупность представлений о действующем праве;</li><li>законопослушность в обществе.</li></ul></div></div>
+        <div class="card"><div class="question">95. В структуру правосознания включаются:</div><div class="answer"><ul><li>правовая психология;</li><li>правовая идеология;</li></ul></div></div>
+        <div class="card"><div class="question">96. По уровню знания и понимания правовых явлений правосознание делится на:</div><div class="answer"><ul><li>обыденное;</li><li>профессиональное;</li><li>научное;</li></ul></div></div>
+        <div class="card"><div class="question">97. Отрицательное отношение к праву, законам и правовым формам организации общественных отношений называется:</div><div class="answer"><ul><li>правовым нигилизмом;</li></ul></div></div>
+        <div class="card"><div class="question">98. Видами толкования права по объему являются :</div><div class="answer"><ul><li>распространительное;</li><li>ограничительное;</li><li>адекватное (буквальное);</li></ul></div></div>
+        <div class="card"><div class="question">99. Толкование права- это: (пометить 3)</div><div class="answer"><ul><li>уяснение смысла правовых норм;</li><li>вид юридической деятельности;</li><li>разъяснение смысла правовых норм;</li></ul></div></div>
+        <div class="card"><div class="question">100. Видами толкования права в зависимости от субъекта толкования являются:</div><div class="answer"><ul><li>аутентическое;</li><li>доктринальное;</li><li>легальное;</li><li>официальное;</li></ul></div></div>
+        <div class="card"><div class="question">101. Способами толкования права являются: ( укажите 4)</div><div class="answer"><ul><li>грамматический;</li><li>логический;</li><li>историко-политический;</li><li>специально-юридический;</li></ul></div></div>
+        <div class="card"><div class="question">102. Аутентическое толкование дается:</div><div class="answer"><ul><li>органом, издавшим правовой акт;</li></ul></div></div>
+        <div class="card"><div class="question">103. Необходимость толкования правовых норм обусловлена: (пометить 3)</div><div class="answer"><ul><li>системностью права;</li><li>нормативностью права;</li><li>формальностью права;</li></ul></div></div>
+        <div class="card"><div class="question">104. Нормы права нуждаются в толковании, потому что они (пометить 3):</div><div class="answer"><ul><li>взаимосвязаны;</li><li>имеют общий характер;</li><li>существуют в письменной форме;</li></ul></div></div>
+        <div class="card"><div class="question">105. Интерпретационный акт – это:</div><div class="answer"><ul><li>акт толкования нормативных предписаний;</li></ul></div></div>
+        <div class="card"><div class="question">106. Система правовых ценностей, идей, стереотипов поведения и юридических практик, применяемых членами данной общности называется:</div><div class="answer"><ul><li>"право* культур* ".</li></ul></div></div>
+        <div class="card"><div class="question">107. Деятельность по анализу фактических обстоятельств, требующих правового разрешения, и выбор нормы права, предусматривающей эти обстоятельства называется:</div><div class="answer"><ul><li>"юридическ* квалификац* ".</li></ul></div></div>
+        <div class="card"><div class="question">108. Реализованная в социальных отношениях законность обозначается термином:</div><div class="answer"><ul><li>"правопоряд* ".</li></ul></div></div>
+        <div class="card"><div class="question">109. К элементам механизма правового регулирования относятся:</div><div class="answer"><ul><li>нормы права;</li><li>правоотношения;</li><li>акты применения права;</li><li>акты реализации права;</li></ul></div></div>
+        <div class="card"><div class="question">110. Телеологическое толкование это:</div><div class="answer"><ul><li>уяснение целей законодателя, которые им ставились в момент создания нормы права.</li></ul></div></div>
+        <div class="card"><div class="question">111. Специфика юридического регулирования определенной сферы общественных отношений с помощью различных юридических средств и способов — это:</div><div class="answer"><ul><li>правовой режим.</li></ul></div></div>
+        <div class="card"><div class="question">112. Смысл, главное, глубинное в государстве, что определяет его содержание, назначение и функционирование:</div><div class="answer"><ul><li>сущность государства.</li></ul></div></div>
+        <div class="card"><div class="question">113. Вид толкования правовых норм, при котором содержание нормы права оказывается шире ее текстуального выражения:</div><div class="answer"><ul><li>распространительное.</li></ul></div></div>
+        <div class="card"><div class="question">114. Укажите виды юридических фактов:</div><div class="answer"><ul><li>юридические акты</li><li>правонарушения</li><li>юридические события</li><li>юридические поступки.</li></ul></div></div>
+        <div class="card"><div class="question">115. Структура субъективного права состоит из следующих элементов:</div><div class="answer"><ul><li>право на собственные действия;</li><li>право обращаться за защитой нарушенного права;</li><li>право требовать должного поведения от обязанных лиц.</li></ul></div></div>
+        <div class="card"><div class="question">116. Законность это:</div><div class="answer"><ul><li>требование соблюдать законы.</li></ul></div></div>
+        <div class="card"><div class="question">117. К принципам юридической ответственности относятся:</div><div class="answer"><ul><li>законность;</li><li>справедливость;</li><li>неотвратимость.</li></ul></div></div>
+        <div class="card"><div class="question">118. Определите вид санкции следующей правовой нормы: «За нарушение правил пожарной безопасности на виновного налагается штраф в размере от50 до 100 рублей». Это санкция:</div><div class="answer"><ul><li>относительно – определенная.</li></ul></div></div>
+        <div class="card"><div class="question">119. Способ правового регулирования, характеризующийся наложением обязанности воздерживаться от совершения определенных действий:</div><div class="answer"><ul><li>запрет.</li></ul></div></div>
+        <div class="card"><div class="question">120. Применение права это деятельность, которая: (пометить 3)</div><div class="answer"><ul><li>завершается изданием правового акта;</li><li>осуществляется в специальных процессуальных формах;</li><li>направлена на разрешение индивидуально-конкретных юридических ситуаций;</li></ul></div></div>
+        <div class="card"><div class="question">121. В высказывании: "Данное поведение носит циничный характер" содержится:</div><div class="answer"><ul><li>моральная оценка;</li></ul></div></div>
+        <div class="card"><div class="question">122. Государственный суверенитет это: (пометить 2)</div><div class="answer"><ul><li>верховенство государственной власти в обществе;</li><li>политико-правовая независимость государства;</li></ul></div></div>
+        <div class="card"><div class="question">123. Признаками правового государства являются: (пометить 2)</div><div class="answer"><ul><li>идеологический плюрализм;</li><li>верховенство закона;</li></ul></div></div>
+        <div class="card"><div class="question">124. В соответствии с теорией общественно-экономических формаций государства делятся на:</div><div class="answer"><ul><li>четыре вида;</li></ul></div></div>
+        <div class="card"><div class="question">125. Легитимность государственной власти означает:</div><div class="answer"><ul><li>признание ее большинством населения;</li></ul></div></div>
+        <div class="card"><div class="question">126. Легальность власти это ее:</div><div class="answer"><ul><li>формирование и функционирование на основе закона (права);</li></ul></div></div>
+        <div class="card"><div class="question">127. Организованная сила, обеспечивающая возможность одной социальной общности подчинять своей воле другие социальные общности:</div><div class="answer"><ul><li>социальная власть;</li></ul></div></div>
+        <div class="card"><div class="question">128. К понятию государственного суверенитета относится:</div><div class="answer"><ul><li>независимость государства от любой власти в стране;</li></ul></div></div>
+        <div class="card"><div class="question">129. Политико-правовое свойство государства, означающее верховенство государственной власти внутри страны и независимость ее во взаимоотношениях с другими государствами называется:</div><div class="answer"><ul><li>суверенитет;</li><li>В соответствии с марксистско-ленинской теорией, признаками государства являются (пометить 4)</li><li>экономическая обусловленность государства;</li><li>расслоение общества на антагонистические классы;</li><li>возведение в закон воли экономически господствующего класса;</li><li>наличие аппарата принуждения;</li></ul></div></div>
+        <div class="card"><div class="question">130. В марксистско-ленинской теории государство понимается как:</div><div class="answer"><ul><li>машина для поддержания господства одного класса над другим;</li></ul></div></div>
+        <div class="card"><div class="question">131. Государства типологизируются по научно-техническому развитию на:</div><div class="answer"><ul><li>доиндустриальные, индустриальные и постиндустриальные;</li></ul></div></div>
+        <div class="card"><div class="question">132. Классовая сущность государства выражается в том, что:</div><div class="answer"><ul><li>государство предназначено для регулирования общественных отношений в интересах господствующего класса.</li></ul></div></div>
+        <div class="card"><div class="question">133. В соответствии с марксистско-ленинской теорией причинами возникновения государства являются: (пометить 2)</div><div class="answer"><ul><li>общественное разделение труда;</li><li>раскол общества на эксплуататоров и эксплуатируемых;</li></ul></div></div>
+        <div class="card"><div class="question">134. Причиной возникновения государства в соответствии с теологической теорией является:</div><div class="answer"><ul><li>божественное установление;</li></ul></div></div>
+        <div class="card"><div class="question">135. Причиной возникновения государства по теории насилия является:</div><div class="answer"><ul><li>необходимость держать в подчинении покоренные народы;</li></ul></div></div>
+        <div class="card"><div class="question">136. К теориям происхождения государства относятся: (пометить 3)</div><div class="answer"><ul><li>теория насилия;</li><li>договорная теория;</li><li>патриархальная теория;</li></ul></div></div>
+        <div class="card"><div class="question">137. Основными теориями присхождения права являются: (пометить 3):</div><div class="answer"><ul><li>естественная;</li><li>теологическая;</li><li>историческая;</li></ul></div></div>
+        <div class="card"><div class="question">138. Государственная власть отличается от социальной власти при первобытнообщинном строе тем, что: (пометить 3)</div><div class="answer"><ul><li>носит публичный характер;</li><li>осуществляется специальным аппаратом управления и принуждения;</li><li>имеет суверенный характер;</li></ul></div></div>
+        <div class="card"><div class="question">139. Особенностями первобытно-общинного строя являются (пометить 4):</div><div class="answer"><ul><li>присваивающая экономика;</li><li>общая собственность;</li><li>объединение по родственному признаку;</li><li>уравнительное распределение;</li></ul></div></div>
+        <div class="card"><div class="question">140. Род как первая форма организации общества имеет следующие признаки (пометить 3):</div><div class="answer"><ul><li>наличие кровного или предполагаемого родства;</li><li>наличие общей собственности и совместного труда;</li><li>наличие уравнительного распределения.</li></ul></div></div>
+        <div class="card"><div class="question">141. К внутренним функциям государства с социал-демократическим режимом относятся: (пометить 3)</div><div class="answer"><ul><li>деятельность государства по охране условий труда, по оказанию помощи малообеспеченным, нетрудоспособным членам общества;</li><li>контроль за мерой труда и мерой потребления;</li><li>установление налоговой системы, способствующей устранению значительного имущественного неравенства;</li></ul></div></div>
+        <div class="card"><div class="question">142. К функциям государства, характеризующим его как правовое государство, относятся: (пометить 2)</div><div class="answer"><ul><li>охрана прав и свобод граждан;</li><li>обеспечение идеологического плюрализма;</li></ul></div></div>
+        <div class="card"><div class="question">143. Какие виды функций государства выделяют в зависимости от направленности государственной деятельности:</div><div class="answer"><ul><li>внутренние и внешние;</li></ul></div></div>
+        <div class="card"><div class="question">144. В зависимости от количества лиц, участвующих в принятии решения, органы государства делятся на:</div><div class="answer"><ul><li>коллегиальные;</li><li>единоличные;</li></ul></div></div>
+        <div class="card"><div class="question">145. Органы государства по способам формирования бывают (указать 3) :</div><div class="answer"><ul><li>Наследуемыми;</li><li>Избираемыми;</li><li>Назначаемыми;</li></ul></div></div>
+        <div class="card"><div class="question">146. Принципами организации и деятельности государственного аппарата являются: (пометить 4)</div><div class="answer"><ul><li>законность;</li><li>демократизм;</li><li>научность;</li><li>профессионализм;</li></ul></div></div>
+        <div class="card"><div class="question">147. Производными органами государства являются (указать 3):</div><div class="answer"><ul><li>Министр иностранных дел Российской Федерации;</li><li>Председатель Государственной Думы Российской Федерации;</li><li>Генеральный прокурор Российской Федерации;</li></ul></div></div>
+        <div class="card"><div class="question">148. Органом местного самоуправления является:</div><div class="answer"><ul><li>Администрация города Екатеринбурга;</li></ul></div></div>
+        <div class="card"><div class="question">149. Должность «Государственный секретарь» в государственном аппарате США соответствует в аппарате Российского государства должности:</div><div class="answer"><ul><li>Министра иностранных дел;</li></ul></div></div>
+        <div class="card"><div class="question">150. Принцип законности в деятельности государственных органов означает, что:</div><div class="answer"><ul><li>государственные органы создаются, наделены компетенцией и действуют в установленном законом порядке;</li></ul></div></div>
+        <div class="card"><div class="question">151. Принцип гласности в деятельности государственных органов означает, что:</div><div class="answer"><ul><li>субъекты права информированы о практической деятельности конкретных государственных органов и должностных лиц;</li></ul></div></div>
+        <div class="card"><div class="question">152. В Российской Федерации в государственный аппарат входят:</div><div class="answer"><ul><li>государственные органы и должностные лица;</li></ul></div></div>
+        <div class="card"><div class="question">153. Теория разделения властей выделяет следующие ветви власти:</div><div class="answer"><ul><li>законодательную;</li><li>исполнительную;</li><li>судебную;</li></ul></div></div>
+        <div class="card"><div class="question">154. Признаками парламентарной республики являются ( указать 3):</div><div class="answer"><ul><li>избрание президента парламентом;</li><li>наделение парламента правом требовать отставки правительства;</li><li>формирование правительства парламентом;</li></ul></div></div>
+        <div class="card"><div class="question">155. Формами правления являются:</div><div class="answer"><ul><li>ограниченная монархия;</li><li>республика;</li></ul></div></div>
+        <div class="card"><div class="question">156. В зависимости от формы государственного устройства государства делятся на:</div><div class="answer"><ul><li>унитарные и федеративные;</li></ul></div></div>
+        <div class="card"><div class="question">157. Политический режим государства это:</div><div class="answer"><ul><li>совокупность методов осуществления государственной власти;</li></ul></div></div>
+        <div class="card"><div class="question">158. Монархия отличается от республики:</div><div class="answer"><ul><li>порядком образования высших органов государственной власти;</li></ul></div></div>
+        <div class="card"><div class="question">159. Политико-территориальное устройство государства, характер взаимоотношений между государством в целом и его составными частями это:</div><div class="answer"><ul><li>форма государственного устройства;</li></ul></div></div>
+        <div class="card"><div class="question">160. К внутренним функций тоталитарного государства относятся: (пометить 2)</div><div class="answer"><ul><li>всеобъемлющий контроль за экономической жизнью;</li><li>планирование социально-экономического развития общества;</li></ul></div></div>
+        <div class="card"><div class="question">161. В наибольшей степени соответствующим либерально-демократической идеологии является определение: «государство – это:</div><div class="answer"><ul><li>политическая организация общества, обеспечивающая его единство и целостность, гарантирующая права, свободы граждан путем »укрепления законности и правопорядка»;</li><li>Государствами, в которых в ХХ веке был тоталитарный политический режим являются</li></ul></div></div>
+        <div class="card"><div class="question">162. : (пометить 3)</div><div class="answer"><ul><li>Германия;</li><li>Китай;</li><li>Куба;</li></ul></div></div>
+        <div class="card"><div class="question">163. Государствами, в которых в ХХ веке был фашистский режим являются: (пометить 2)</div><div class="answer"><ul><li>Италия;</li><li>Испания;</li></ul></div></div>
+        <div class="card"><div class="question">164. Государства, в настоящее время являющиеся монархиями: (пометить 3)</div><div class="answer"><ul><li>Испания</li><li>Япония;</li><li>Нидерланды;</li></ul></div></div>
+        <div class="card"><div class="question">165. Виды демократических политических режимов:</div><div class="answer"><ul><li>социальной демократии;</li><li>либеральной демократии;</li></ul></div></div>
+        <div class="card"><div class="question">166. Государство занимает главное место в политической системе общества, потому что: (пометить 3)</div><div class="answer"><ul><li>устанавливает единые правила для всех субъектов политической системы;</li><li>осуществляет юридическую регистрацию субъектов политической системы;</li><li>решает основные вопросы развития общества;</li></ul></div></div>
+        <div class="card"><div class="question">167. Компонентами политической системы общества являются (указать 2):</div><div class="answer"><ul><li>политические объединения;</li><li>политическая деятельность;</li></ul></div></div>
+        <div class="card"><div class="question">168. Какой субъект политической системы занимает центральное место в политической и общественной жизни любой страны:</div><div class="answer"><ul><li>государство;</li></ul></div></div>
+        <div class="card"><div class="question">169. Признаками социал-демократического политического режима являются: (пометить 3)</div><div class="answer"><ul><li>эффективные социальные функции государства;</li><li>низкий уровень социальной конфронтации, конфликтности;</li><li>отсутствие существенных различий в материальных условиях жизни различных слоев общества;</li></ul></div></div>
+        <div class="card"><div class="question">170. Политическая партия – это:</div><div class="answer"><ul><li>общественное объединение, созданное в целях участия граждан в политической жизни общества, а также представления интересов определенной социальной группы в органах государства и органах местного самоуправления;</li></ul></div></div>
+        <div class="card"><div class="question">171. Добровольные объединения граждан, объединившихся на основе общности их интересов, в установленном законом порядке, для удовлетворения духовных или иных нематериальных потребностей – это:</div><div class="answer"><ul><li>общественные и религиозные организации;</li></ul></div></div>
+        <div class="card"><div class="question">172. Политические системы в соответствии с формационным подходом подразделяются на:</div><div class="answer"><ul><li>рабовладельческие, феодальные, буржуазные и социалистические;</li></ul></div></div>
+        <div class="card"><div class="question">173. Субъектами политической системы являются: (пометить 2)</div><div class="answer"><ul><li>Религиозные организации;</li><li>Политические партии;</li></ul></div></div>
+        <div class="card"><div class="question">174. Субъектами политической системы общества являются: (пометить 3)</div><div class="answer"><ul><li>государство;</li><li>политические партии;</li><li>политические движения;</li></ul></div></div>
+        <div class="card"><div class="question">175. К субъектам политической системы общества относятся (указать 3):</div><div class="answer"><ul><li>государство;</li><li>политические партии;</li><li>религиозные организации.</li></ul></div></div>
+        <div class="card"><div class="question">176. Нормативно-правовой акт отличается от правоприменительного акта:</div><div class="answer"><ul><li>Общим характером действий</li></ul></div></div>
+        <div class="card"><div class="question">177. Свойством нормативно-правового акта, позволяющим определить его место в системе нормативно-правовых актов, является:</div><div class="answer"><ul><li>юридическая сила;</li></ul></div></div>
+        <div class="card"><div class="question">178. К юридической технике можно отнести:</div><div class="answer"><ul><li>средства и способы оформления юридических документов;</li><li>юридические конструкции;</li></ul></div></div>
+        <div class="card"><div class="question">179. Гипотеза правовой нормы это:</div><div class="answer"><ul><li>условие, при наступлении которого следует руководствоваться данной нормой;</li></ul></div></div>
+        <div class="card"><div class="question">180. Диспозитивный характер нормы означает:</div><div class="answer"><ul><li>возможность участников правоотношения самостоятельно определять свои права и обязанности;</li></ul></div></div>
+        <div class="card"><div class="question">181. Если норма права носит императивный характер, то:</div><div class="answer"><ul><li>её предписание категорически обязательно для выполнения;</li></ul></div></div>
+        <div class="card"><div class="question">182. Структурный элемент нормы права, содержащий условие, при котором действует норма называется:</div><div class="answer"><ul><li>гипотезой;</li></ul></div></div>
+        <div class="card"><div class="question">183. К признакам нормы права относятся (указать 3):</div><div class="answer"><ul><li>обеспеченность возможностью применения государственного принуждения;</li><li>общеобязательность;</li><li>формальная определённость;</li></ul></div></div>
+        <div class="card"><div class="question">184. По степени определенности санкции юридических норм подразделяются на:</div><div class="answer"><ul><li>абсолютно-определенные;</li><li>альтернативные;</li><li>относительно-определенные;</li></ul></div></div>
+        <div class="card"><div class="question">185. В целях учёта конкретных социальных условий и индивидуальных характеристик участников правовых отношений санкции правовых норм должны иметь:</div><div class="answer"><ul><li>относительно определённый характер</li></ul></div></div>
+        <div class="card"><div class="question">186. Под нормой права в юридической науке и практике правового регулирования понимается: (пометить 2)</div><div class="answer"><ul><li>единица нормативно-правового текста, в которой выражено государственно-властное предписание, направленное на регулирование общественных отношений;</li><li>общеобязательное, формально-определенное правило поведения, установленное и гарантированное государством, выступающее регулятором общественных отношений;</li></ul></div></div>
+        <div class="card"><div class="question">187. Способность субъекта права иметь юридические права и обязанности это:</div><div class="answer"><ul><li>правоспособность;</li></ul></div></div>
+        <div class="card"><div class="question">188. Признаками правоотношения являются (пометить 3):</div><div class="answer"><ul><li>государственная гарантированность этих отношений;</li><li>наличие юридических прав и обязанностей у сторон этого отношения;</li><li>предусмотренность отношения нормами права;</li></ul></div></div>
+        <div class="card"><div class="question">189. Организация может быть признана субъектом права, в случае, если:</div><div class="answer"><ul><li>она имеет наименование;</li><li>она может выступать в правоотношении от собственного имени;</li><li>ее существование предусмотрено законом или иным правовым актом ;</li></ul></div></div>
+        <div class="card"><div class="question">190. Юридическим поступком как разновидностью юридического факта по волевому признаку является:</div><div class="answer"><ul><li>совершение творческого акта;</li></ul></div></div>
+        <div class="card"><div class="question">191. Правоотношение, в котором определены обе стороны (конкретному управомоченному субъекту противостоит конкретное обязанное лицо) является:</div><div class="answer"><ul><li>относительным;</li></ul></div></div>
+        <div class="card"><div class="question">192. Правонарушение обладает следующими признаками: (пометить 4)</div><div class="answer"><ul><li>деяние носит противоправный характер;</li><li>данное деяние наносит вред человеку и (или) обществу;</li><li>деяние носит виновный характер;</li><li>деяние должно повлечь юридическую ответственность;</li></ul></div></div>
+        <div class="card"><div class="question">193. К основаниям юридической ответственности относятся: (пометить 3)</div><div class="answer"><ul><li>наличие нормы права, предусматривающей ответственность;</li><li>наличие состава правонарушения;</li><li>наличие правоприменительного акта;</li></ul></div></div>
+        <div class="card"><div class="question">194. Ответственное отношение студента к предстоящим экзаменам является:</div><div class="answer"><ul><li>примером общесоциальной, позитивной ответственности;</li></ul></div></div>
+        <div class="card"><div class="question">195. Мерами государственного принуждения помимо юридической ответственности являются: (пометить 4)</div><div class="answer"><ul><li>меры защиты субъективных прав;</li><li>меры воспитательного характера;</li><li>меры пресечения;</li><li>меры медицинского характера;</li></ul></div></div>
+        <div class="card"><div class="question">196. Взыскание с должника суммы долга по решению суда является:</div><div class="answer"><ul><li>мерой защиты субъективного права;</li></ul></div></div>
+        <div class="card"><div class="question">197. Вид правового поведения, при котором отсутствует вина лица, причинившего вред интересам личности, общества, государства называется:</div><div class="answer"><ul><li>объективно-противоправное деяние;</li></ul></div></div>
+        <div class="card"><div class="question">198. В структуре правонарушения фактичекий состав может быть элементом:</div><div class="answer"><ul><li>объективной стороны;</li></ul></div></div>
+        <div class="card"><div class="question">199. В теории права выделяют в качестве основных следующие методы правового регулирования: (пометить 2)</div><div class="answer"><ul><li>диспозитивное регулирование;</li><li>императивное регулирование;</li></ul></div></div>
+        <div class="card"><div class="question">200. Общедозволительный тип правового регулирования наиболее характерен для:</div><div class="answer"><ul><li>гражданского права;</li></ul></div></div>
+        <div class="card"><div class="question">201. Правовое регулирование определенной сферы общественных отношений с помощью различных юридических средств и способов это:</div><div class="answer"><ul><li>правовой режим;</li></ul></div></div>
+        <div class="card"><div class="question">202. Регулятивно-динамическая функция права означает:</div><div class="answer"><ul><li>целенаправленное воздействие юридическими средствами на общественные отношения в целях их развития и совершенствования;</li></ul></div></div>
+        <div class="card"><div class="question">203. Структура акта применения права включает в себя:</div><div class="answer"><ul><li>четыре элемента;</li><li>Часть правоприменительного акта, содержащая сведения о фактических</li></ul></div></div>
+        <div class="card"><div class="question">204. обстоятельствах дела называется:</div><div class="answer"><ul><li>описательной;</li></ul></div></div>
+        <div class="card"><div class="question">205. Применение отличается от иных форм реализации права:</div><div class="answer"><ul><li>субъектами реализации;</li></ul></div></div>
+        <div class="card"><div class="question">206. Законность понимается как :</div><div class="answer"><ul><li>требование соблюдать законы;</li></ul></div></div>
+        <div class="card"><div class="question">207. Требование равенства всех перед законом понимается как:</div><div class="answer"><ul><li>равное требование соблюдения законов и неукоснительной ответственности за их нарушение</li></ul></div></div>
+        <div class="card"><div class="question">208. Законность и Правопорядок соотносятся как:</div><div class="answer"><ul><li>должное и сущее;</li></ul></div></div>
+        <div class="card"><div class="question">209. В структуру правосознания входят (указать 2):</div><div class="answer"><ul><li>правовая идеология;</li><li>правовая психология;</li></ul></div></div>
+        <div class="card"><div class="question">210. Элементами механизма правового регулирования являются (пометить 4):</div><div class="answer"><ul><li>нормы права;</li><li>юридические факты;</li><li>акты применения права;</li><li>правовые отношения;</li></ul></div></div>
+        <div class="card"><div class="question">211. Способ правового регулирования, который обязывает воздерживаться от совершения определенных действий называется:</div><div class="answer"><ul><li>запрет;</li></ul></div></div>
+        <div class="card"><div class="question">212. Правовой запрет – это:</div><div class="answer"><ul><li>пассивная обязанность;</li></ul></div></div>
+        <div class="card"><div class="question">213. Стадиями применения права являются: (пометить 4):</div><div class="answer"><ul><li>установление и анализ фактических обстоятельств дела;</li><li>выбор нормы права, предусматривающей обстоятельства данного дела;</li><li>вынесение правоприменительного решения;</li><li>реализация вынесенного решения;</li></ul></div></div>
+        <div class="card"><div class="question">214. Пробел в законодательстве это:</div><div class="answer"><ul><li>отсутствие конкретной нормы, необходимой для регламентации отношений, находящихся в сфере правового регулирования;</li></ul></div></div>
+        <div class="card"><div class="question">215. Вид правовых норм, реализуемых путем использования:</div><div class="answer"><ul><li>управомочивающие;</li></ul></div></div>
+        <div class="card"><div class="question">216. Разъяснение смысла правовой нормы, относящееся только к конкретному случаю:</div><div class="answer"><ul><li>казуальное толкование;</li></ul></div></div>
+        <div class="card"><div class="question">217. Объективную сторону состава правонарушения составляют (пометить 3):</div><div class="answer"><ul><li>противоправные действия нарушителя;</li><li>наступившие вредные последствия;</li><li>причинная связь между действиями виновного и их последствиями;</li></ul></div></div>
+        <div class="card"><div class="question">218. Сторонниками патриархальной теории происхождения государства являются: (Пометить 2)</div><div class="answer"><ul><li>Роберт Фильмер</li><li>Аристотель</li></ul></div></div>
+        <div class="card"><div class="question">219. По объему властных полномочий органы государства подразделяются на:</div><div class="answer"><ul><li>высшие и местные</li></ul></div></div>
+        <div class="card"><div class="question">220. Законы РФ вступают в силу (пометить 3):</div><div class="answer"><ul><li>с даты, в них указанной</li><li>с наступлением обстоятельств, в них указанных</li><li>по истечении 10 дней после их опубликования, если не указанно иное</li></ul></div></div>
+        <div class="card"><div class="question">221. К нормам частного права относятся:</div><div class="answer"><ul><li>нормы семейного права</li><li>нормы гражданского права</li></ul></div></div>
+        <div class="card"><div class="question">222. Термином «объективное (позитивное) право» обозначается (Пометить 3):</div><div class="answer"><ul><li>действующая система нормативных юридических предписаний</li><li>система юридических норм</li><li>нормы, установленные и охраняемые государством</li></ul></div></div>
+        <div class="card"><div class="question">223. Толкование правовых норм, которое осуществляется самим создателем правовой номы это:</div><div class="answer"><ul><li>аутентическое толкование</li></ul></div></div>
+        <div class="card"><div class="question">224. Объективную сторону состава правонарушения составляют (Пометить 3):</div><div class="answer"><ul><li>наступившие вредные последствия</li><li>причинная связь между действиями виновного и их последствиями</li><li>противоправные действия нарушителя</li></ul></div></div>
+        <div class="card"><div class="question">225. Стадиями правового регулирования являются (Пометить 2):</div><div class="answer"><ul><li>реализация субъективных юридических прав и обязанностей</li><li>создание норм права</li></ul></div></div>
+        <div class="card"><div class="question">226. Институт общества (социальный институт) — это:</div><div class="answer"><ul><li>элемент общества, который оказывает существенное влияние на все стороны жизни общества</li></ul></div></div>
+        <div class="card"><div class="question">227. К требованиям законности при принятии правоприменительного акта относятся: (Пометить 3)</div><div class="answer"><ul><li>совершение правоприменительных действий в строгих рамках своей компетенции</li><li>строгое соблюдение процессуальных норм, регулирующих рассмотрение данного дела</li><li>правильная юридическая квалификация рассматриваемого дела</li></ul></div></div>
+        <div class="card"><div class="question">228. Высшая юридическая сила закона означает, что:</div><div class="answer"><ul><li>все подзаконные нормативно-правовые акты должны приниматься в соответсвие и во исполнение закона и не противоречить ему</li><li>закон имеет общеобязательный характер</li><li>соблюдение закона обеспечено мерами государственного принуждения</li></ul></div></div>
+        <div class="card"><div class="question">229. Одной из мер защиты субъективных прав является:</div><div class="answer"><ul><li>принудительное изъятие долга</li></ul></div></div>
+        <div class="card"><div class="question">230. В годовалом возрасте ребенок может быть обладателем следующих юридических обязанностей (Пометить 2):</div><div class="answer"><ul><li>получения необходимых в данном в данном возрасте медицинских прививок</li><li>получения алиментов</li></ul></div></div>
+        <div class="card"><div class="question">231. Сторонниками марксистской теории происхождения государства являются: (Пометить 3)</div><div class="answer"><ul><li>Николай Бердяев</li><li>Фридрих Энгельс</li><li>Владимир Ленин</li></ul></div></div>
+        <div class="card"><div class="question">232. Признаками отличающими закон от подзаконных актов являются:</div><div class="answer"><ul><li>особая значимость регулируемых отношений</li><li>обладание высшей юридической силой</li><li>принятие высшим представительным органом или народом</li><li>особая процедура принятия</li></ul></div></div>
+        <div class="card"><div class="question">233. Основоположниками теории насилия являются: (Пометить 2)</div><div class="answer"><ul><li>Карл Каутский</li><li>Евгений Дюринг</li></ul></div></div>
+        <div class="card"><div class="question">234. В Российской Федерации законодательным органом является:</div><div class="answer"><ul><li>Федеральное собрание РФ</li></ul></div></div>
+        <div class="card"><div class="question">235. Элементом механизма государства является:</div><div class="answer"><ul><li>государственный орган</li></ul></div></div>
+        <div class="card"><div class="question">236. По субъекту толкования выделяются следующие виды толкования (Пометить 2):</div><div class="answer"><ul><li>правоприменительное</li><li>профессиональное</li></ul></div></div>
+        <div class="card"><div class="question">237. Возникновение субъективных прав и юридических обязанностей участников правоотношений является:</div><div class="answer"><ul><li>первой стадией правового регулирования</li></ul></div></div>
+        <div class="card"><div class="question">238. К принципам правотворчества относятся (Пометить 4):</div><div class="answer"><ul><li>принцип использования правового опыта</li><li>принцип демократизма</li><li>Принцип законности</li><li>Принцип научности</li></ul></div></div>
+        <div class="card"><div class="question">239. Правовое регулирование определенной сферы общественных отношений с помощью различных юридических средств и способов это:</div><div class="answer"><ul><li>правовой режим</li></ul></div></div>
+        <div class="card"><div class="question">240. Основоположниками договорной теории происхождения государства являются (Пометить 2):</div><div class="answer"><ul><li>Томас Гобсс</li><li>Ж.Ж. Руссо</li><li>Признаками нормы права, отличающими ее от нормы морали, являются (указать 2)</li><li>формальная определенность</li><li>системность</li><li>Термин «правомочие» используется для характеристики</li><li>субъективного права</li></ul></div></div>
+        <div class="card"><div class="question">241. Политические системы в зависимости от вида политического режима подразделяются на:</div><div class="answer"><ul><li>демократические, авторитарные и тоталитарные</li></ul></div></div>
+        <div class="card"><div class="question">242. По отношению к отраслевым юридическим наукам ТГП выполняет:</div><div class="answer"><ul><li>методологическую функцию</li></ul></div></div>
+        <div class="card"><div class="question">243. Видами суверенитета в зависимости от субъективного состава являются:</div><div class="answer"><ul><li>государственный</li><li>национальный</li><li>народный</li></ul></div></div>
+        <div class="card"><div class="question">244. Теория происхождения государства, согласно которой государство возникло в результате необходимости обеспечить защиту естественных прав человека называется:</div><div class="answer"><ul><li>органической</li></ul></div></div>
+        <div class="card"><div class="question">245. Правовой нигилизм может проявляться в следующих формах:</div><div class="answer"><ul><li>теоретической и практической</li></ul></div></div>
+        <div class="card"><div class="question">246. Автором работы «Происхождение семьи, частной собственности и государства» является:</div><div class="answer"><ul><li>Ф. Энгельс</li></ul></div></div>
+        <div class="card"><div class="question">247. Понятие «норма» является основополагающим для:</div><div class="answer"><ul><li>правового позитивизма</li></ul></div></div>
+        <div class="card"><div class="question">248. Основоположниками нормативистской теории права является:</div><div class="answer"><ul><li>Г. Кельзен</li></ul></div></div>
+        <div class="card"><div class="question">249. Принцип «Закон обратной силы не имеет» означает что:</div><div class="answer"><ul><li>действие закона не распространяется на обстоятельства, которые имели место до его вступления в законную силу.</li></ul></div></div>
+        <div class="card"><div class="question">250. К элементам механизма правового регулирования относятся:</div><div class="answer"><ul><li>правоотношения</li><li>акты применения права</li><li>нормы права</li><li>акты реализации права</li></ul></div></div>
+        <div class="card"><div class="question">251. Воплощение принципа разделения властей в деятельности государства направленно на:</div><div class="answer"><ul><li>создание механизмов, минимизирующих произвол со стороны государственных органов и должностных лиц</li></ul></div></div>
+        <div class="card"><div class="question">252. ТГП как наука изучает (Пометить 2):</div><div class="answer"><ul><li>закономерности функционирования и развития государств и права</li><li>основные понятия государства и права</li></ul></div></div>
+        <div class="card"><div class="question">253. Причинами возникновения государства в соответствии с договорной теорией являются: (пометить 2)</div><div class="answer"><ul><li>возникновение договора между властвующими и подвластными</li><li>необходимость сгладить конфликты между различными социальными группами</li><li>Юридическая ответственность не наступает, если лицо (пометить 2)</li><li>находилось в состоянии необходимой обороны</li><li>находилось в состоянии неделиктоспособности</li><li>Признаками тоталитарного фашистского режима являются (пометить 3)</li><li>осуществление власти диктаторами, насильственными методами</li><li>незащищенность прав и свобод человека и гражданина</li><li>переход власти в руки реакционных сил</li></ul></div></div>
+        <div class="card"><div class="question">254. Одним из основоположников естесственно-правовой теории является:</div><div class="answer"><ul><li>Ж.-Ж. Руссо</li></ul></div></div>
+        <div class="card"><div class="question">255. В настоящее время федеративными государствами являются: (пометить 4)</div><div class="answer"><ul><li>Канада</li><li>Бразилия</li><li>Мексика</li><li>Бельгия</li></ul></div></div>
+        <div class="card"><div class="question">256. Методами ТГП являются: (пометить 3)</div><div class="answer"><ul><li>специально-юридический</li><li>метод правовой конвергенции</li><li>сравнительно-правовой</li></ul></div></div>
+        <div class="card"><div class="question">257. Государства делятся на рабовладельческие, феодальные, буржуазные и социалистические в соответствии с подходом:</div><div class="answer"><ul><li>формационным</li></ul></div></div>
+        <div class="card"><div class="question">258. Федеративные государства принято классифицировать по:</div><div class="answer"><ul><li>территориальному принципу</li><li>национальному принципу</li></ul></div></div>
+        <div class="card"><div class="question">259. Способ толкования правовых норм, при котором смысл правовой нормы устанавливается с учетом целей ее издания называется:</div><div class="answer"><ul><li>телеологический</li></ul></div></div>
+        <div class="card"><div class="question">260. Формы правления бывают: (пометить 4)</div><div class="answer"><ul><li>абсолютной монархией</li><li>президентской республикой</li><li>парламентарной монархией</li><li>парламентарной республикой</li></ul></div></div>
+        <div class="card"><div class="question">261. К видам источников права относятся: (пометить 4)</div><div class="answer"><ul><li>нормативные правовые акты</li><li>нормативные договоры</li><li>судебные прецеденты</li><li>санкционированные обычаи</li></ul></div></div>
+        <div class="card"><div class="question">262. Интерпретированным актом называется документ, содержащий:</div><div class="answer"><ul><li>разъяснение смысла правовых норм</li></ul></div></div>
+        <div class="card"><div class="question">263. Государственная власть, осуществляемая интеллектуальной элитой общества, называется:</div><div class="answer"><ul><li>аристократией</li></ul></div></div>
+        <div class="card"><div class="question">264. Право как система норм рассматривается прежде всего в:</div><div class="answer"><ul><li>естественно-правовой теорией права</li></ul></div></div>
+        <div class="card"><div class="question">265. Принципами правотворчества являются( пометить 5):</div><div class="answer"><ul><li>принцип научности</li><li>принцип законности</li><li>принцип использования правового опыта</li><li>принцип демократизма</li><li>связь с практикой</li></ul></div></div>
+        <div class="card"><div class="question">266. Структура субъективного права включает ( пометить 3):</div><div class="answer"><ul><li>право обращаться в компетентные органы за защитой нарушенного права</li><li>право на собственные действиям</li><li>правоспособность</li></ul></div></div>
+        <div class="card"><div class="question">267. Механизм государства включает в себя( пометить 2) :</div><div class="answer"><ul><li>законодательные органы</li><li>органы охраны правопорядка</li></ul></div></div>
+        <div class="card"><div class="question">268. Стадиями правового регулирования являются:</div><div class="answer"><ul><li>индивидуализация и конкретизация юридических прав и обязанностей в правоотношении</li><li>реализация прав и обязанностей субъектами правоотношений</li><li>создание норм права</li></ul></div></div>
+        <div class="card"><div class="question">269. Договор дарения как првоотношение является:</div><div class="answer"><ul><li>относительным</li></ul></div></div>
+        <div class="card"><div class="question">270. Электоратом обозначается:</div><div class="answer"><ul><li>граждане государства, обладающие активным избирательным правом</li></ul></div></div>
+        <div class="card"><div class="question">271. Главное глубинное в государстве, что определяет его содержание, назначение и функционирование это:</div><div class="answer"><ul><li>сущность государства</li></ul></div></div>
+        <div class="card"><div class="question">272. Государства типологизируются по общественно-экономическим формациям на:</div><div class="answer"><ul><li>Феодальные</li><li>Рабовладельческие</li><li>Буржуазные</li><li>Социалистические</li></ul></div></div>
+        <div class="card"><div class="question">273. Систематизация нормативно правовых актов путем объединения действующих нормативно правовых положений называется:</div><div class="answer"><ul><li>консолидация</li><li>инкорпорация</li></ul></div></div>
+        <div class="card"><div class="question">274. Укажите виды систематизации нормативно-правовых актов:</div><div class="answer"><ul><li>кодификация</li><li>Консолидация</li><li>Инкорпорация</li></ul></div></div>
+        <div class="card"><div class="question">275. Трехчленная структура характерна норме права если она:</div><div class="answer"><ul><li>является логически безупречным правилом поведения</li></ul></div></div>
+        <div class="card"><div class="question">276. Укажите виды юридической ответственности:</div><div class="answer"><ul><li>лишение свободы</li><li>штраф</li><li>конфискация имущества</li></ul></div></div>
+        <div class="card"><div class="question">277. Укажите признаки юридической ответственности:</div><div class="answer"><ul><li>мера государственно правового принуждения</li><li>реализация санкций карательных мер</li><li>необходимые последствия совершенного правонарушения</li></ul></div></div>
+        <div class="card"><div class="question">278. Укажите способы правового регулирования:</div><div class="answer"><ul><li>предоставление субъективных прав</li><li>установление запретов</li><li>возложение обязанностей</li><li>Качественная характеристика правовой жизни общества, обозначается термином</li><li>правовой культурой, культурой права</li></ul></div></div>
+        <div class="card"><div class="question">279. Укажите признаки применения права:</div><div class="answer"><ul><li>это властная деятельность управомоченных ( компетентных) органов или лиц</li><li>это деятельность направленная на установление индивидуально-конкретных юридических последствий</li><li>деятельность, осуществляемая в специальных процессуальных формах</li><li>деятельность, завершаемая изданием правового акта</li></ul></div></div>
+        <div class="card"><div class="question">280. Признаками государства являются:</div><div class="answer"><ul><li>Суверенитет</li><li>Наличие права</li><li>Налоговая система</li><li>Население</li></ul></div></div>
+        <div class="card"><div class="question">281. В зависимости от соотношения государства и церкви различают:</div><div class="answer"><ul><li>Светские, теократические клерикальные атеистические политические системы</li></ul></div></div>
+        <div class="card"><div class="question">282. Причиной возникновения госудраства по Марксисткой теории является:</div><div class="answer"><ul><li>общественное разделение труда</li><li>раскол общества на эксплуататоров и эксплуатируемых</li></ul></div></div>
+        <div class="card"><div class="question">283. В ТГП принято делить формы осуществления функций государства на:</div><div class="answer"><ul><li>правовые</li><li>организационные</li></ul></div></div>
+        <div class="card"><div class="question">284. Органы государства по способам формирования:</div><div class="answer"><ul><li>наследуемые</li><li>выбираемые</li><li>назначаемые</li></ul></div></div>
+        <div class="card"><div class="question">285. Организация является субъектом политической системы потому что:</div><div class="answer"><ul><li>выражает интересы какой-нибудь социальной общности</li><li>политическая направленность в ее деятельности, выраженная в ее уставных документах</li></ul></div></div>
+        <div class="card"><div class="question">286. Субъектом политической системой может быть:</div><div class="answer"><ul><li>политические партии</li><li>религиозные организации</li><li>государство</li><li>политические движения</li></ul></div></div>
+        <div class="card"><div class="question">287. Пароли в правовом регулировании нормы права делятся на:</div><div class="answer"><ul><li>регулятивные</li><li>охранительные</li></ul></div></div>
+        <div class="card"><div class="question">288. В нормах особенной части уголовного кодекса специально выделяется часть нормы права, именуемая:</div><div class="answer"><ul><li>санкцией</li></ul></div></div>
+        <div class="card"><div class="question">289. В целях учета конкретных социальных условий индивидуальных характеристик участников правовых отношений санкции правовых норм должны иметь:</div><div class="answer"><ul><li>относительно определенный характер</li></ul></div></div>
+        <div class="card"><div class="question">290. Укажите признаки правонарушения:</div><div class="answer"><ul><li>носит противоправный характер</li><li>данное деяние наносит вред человеку и(или) обществу</li><li>действия носят виновный характер</li><li>эти действия должны повлечь юридическую ответственность</li></ul></div></div>
+        <div class="card"><div class="question">291. Чем отличается применение от иных форм реализации права:</div><div class="answer"><ul><li>субъектами реализации</li></ul></div></div>
+        <div class="card"><div class="question">292. Укажите признаки правоприменительного акта:</div><div class="answer"><ul><li>акт, влекущий юридическое последствие</li><li>обеспеченность государственным принуждением</li><li>издается компетентными органами или лицами</li><li>направлен на реализацию юридических норм</li></ul></div></div>
+        <div class="card"><div class="question">293. Укажите виды норм права, выделенные по признаку отраслевой принадлежности:</div><div class="answer"><ul><li>конституционные</li><li>уголовно-правовые</li><li>семейно-правовые</li></ul></div></div>
+        <div class="card"><div class="question">294. Если физическое лицо обладает юридическими правами и обязанностями, то оно признается:</div><div class="answer"><ul><li>дееспособным</li></ul></div></div>
+        <div class="card"><div class="question">295. Факторами, обуславливающими процесс возникновения государства являются( пометить 3) :</div><div class="answer"><ul><li>природные катаклизмы</li><li>переход от присваивающей к производящей экономике</li><li>социальная стратификация</li></ul></div></div>
+        <div class="card"><div class="question">296. Видами демократических политических режимов:</div><div class="answer"><ul><li>социальной</li><li>либеральной</li><li>Организация гос.власти, выраженная в форме правления, гос.устройства и политического режима – это форма государства</li><li>Президентская республика отличается от парламентской</li><li>президентской республике правительство формируется президентом, а в парламентской партией……</li><li>президентской республике правительство несет ответвенность перед президентом, а в парламентской- перед Парламентом.</li><li>Методы осуществления политической власти, итоговое политическое состояние в обществе, которое складывается в результате взаимодействия и противоборства различных политических сил…. Политический режим</li><li>Военная демократия – переход от первобытной общины к государству</li><li>Общественно-политические течение, отрицающее решающую роль государства в организации жизни общества – анархизм</li><li>В теории государства и права терминов «этатизм»- концепция, исходящая из необходимости и оправданности вмешательства государства во все сферы жизни общества.</li><li>В РФ в структуру гос.аппарата входят – гос.органы и должностные лица</li></ul></div></div>
+        <div class="card"><div class="question">297. В настоящее время федеральными государствами является: Мексика, Бразилия, Канада, Бельгия</div><div class="answer"><ul><li>Целенаправленное воздействие государства, его органов на общество в целом, те или иные его сферы (экономические, социальную, духовную) на основе объективных законов для выполнения стоящих перед обществом задач и функции – это Государственная власть.</li><li>Факторами, обуславливающими процесс возникновения государства, являются.</li><li>переход от присевающей экономике</li><li>социальная стратификация</li><li>природные катаклизмы</li></ul></div></div>
+        <div class="card"><div class="question">298. Признание населением страны необходимости и правомерности действующих институтов государственной власти: легитимность</div><div class="answer"><ul><li>Организация государственной власти, выраженная в форме правления, государственного устройства и политического(государственного) режима – это форма государства</li><li>Основные направления деятельности государства, выражающие его сущность, социальное назначение, задачи и цели по управлению обществом в присущих ему формах и свойственными его методам – это функции государства</li></ul></div></div>
+        <div class="card"><div class="question">299. К функциям государства, вытекающих из противоречий внутри общества, относится: разрешение межнациональных конфликтов</div><div class="answer"><ul><li>Государственный аппарат, построенный и действующий на основе демократизма, пользующийся авторитетом и поддержкой населения – легитивный</li><li>Государственная власть, которая официально провозглашается, правомерно устанавливается и функционирует в режиме законности, приобретает следующее свойство легальность</li><li>Первичная структурная часть механизма (аппарата) государства, участвующая в осуществлении функций государства и наделённая властными полномочиями = государственный орган</li><li>Деление федеративных государств осуществляется на основе</li><li>территориального принципа</li><li>национального принципа</li><li>Нормы первобытного общества, являвшиеся одновременно и нормами организации общественной жизни, и нормами первобытной морали называются мононормами</li></ul></div></div>
+        <div class="card"><div class="question">300. Убежденность народа в непогрешность вождей(лидеров) характерна для следующего типа легитимации власти: харизматического</div><div class="answer"><ul><li>Государственно-властные полномочия (совокупность прав и обязанностей) определенного содержания и объема, которыми наделен государственный орган, называется компетенция</li></ul></div></div>
+        <div class="card"><div class="question">301. Подчинение народа общим разумным законам, перед которыми все без исключения равны, характерна для следующего типа легитимации власти: рациональный</div><div class="answer"><ul><li>Признаками субъекта политической системы является</li><li>выражение интересов и целей какой-либо социальной обности</li><li>осуществление деятельности субъекта на легитимной основе</li><li>Признаками демократического политического режима является</li><li>реализация власти правовыми методами</li><li>обладание высшими органами государства мандатом народа</li><li>всесторонняя защита прав и свобод человека и гражданина</li><li>Система отношений господства и подчинения, концентрированная выражением….</li><li>государственная власть</li><li>Опора государства на силу вековых традиций и обычаев характерна для следубщего типа легитимации власти</li><li>традиционной</li><li>Элементом формы государства, характеризующий организацию верховной государственной власти, порядок образования ее органов и их взаимоотношения- форма правления</li><li>Должность главы правительства в Германии называется канцлер</li><li>Определение государства как машины для угнетения одного класса другим сформировал Ленин</li></ul></div></div>
+`;
+// ==========================================
+// КОНЕЦ БАЗЫ ВОПРОСОВ. НИЖЕ НИЧЕГО НЕ ТРОГАТЬ
+// ==========================================
+
+// Загружаем текст в скрытый блок
+document.getElementById('data-store').innerHTML = rawHTMLData;
+
+// --- ТОТ САМЫЙ ПАРСЕР И ЛОГИКА ТЕСТА ---
+let allQuestions = [];
+let allAnswersPool = [];
+let selectedQuestions = [];
+let currentQIndex = 0;
+let userResults = [];
+
+const extraTgpDistractors = [
+    "правовой обычай", "судебный прецедент", "нормативный договор",
+    "кодификация", "инкорпорация", "консолидация",
+    "гипотеза", "диспозиция", "санкция",
+    "федерация", "конфедерация", "унитарное государство",
+    "республика", "монархия", "авторитаризм", "демократия",
+    "правоспособность", "дееспособность", "деликтоспособность"
+];
+
+// Парсер запускается сразу (без ожидания, так надежнее)
+const rawCards = document.querySelectorAll('#data-store .card');
+
+rawCards.forEach(card => {
+    // ИСПОЛЬЗУЕМ textContent ВМЕСТО innerText
+    let qNode = card.querySelector('.question');
+    if (!qNode) return; // Защита от пустых карточек
+    
+    let qText = qNode.textContent.trim();
+    qText = qText.replace(/^\d+\.\s*/, ''); 
+    
+    const lis = card.querySelectorAll('.answer ul li');
+    let answers = Array.from(lis)
+        // ИСПОЛЬЗУЕМ textContent ВМЕСТО innerText
+        .map(li => li.textContent.replace(/;|\.$/, '').trim())
+        .filter(a => a.length > 2);
+    
+    if(answers.length > 0) {
+        let match = qText.match(/\((?:пометить|указать)\s*(\d+)\)/i);
+        let requiredCount = match ? parseInt(match[1]) : answers.length;
+        let isMulti = requiredCount > 1;
+
+        allQuestions.push({
+            question: qText,
+            correctAnswers: answers,
+            isMulti: isMulti,
+            requiredCount: requiredCount
+        });
+        
+        answers.forEach(a => {
+            if(!allAnswersPool.includes(a)) {
+                allAnswersPool.push(a);
+            }
+        });
+    }
+});
+
+function startQuiz() {
+    if (allQuestions.length === 0) {
+        alert("Ошибка: вопросы не загрузились. Проверьте структуру HTML.");
+        return;
+    }
+    
+    allQuestions.sort(() => 0.5 - Math.random());
+    selectedQuestions = allQuestions.slice(0, 35);
+    currentQIndex = 0;
+    userResults = [];
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('results-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'block';
+    renderQuestion();
+}
+
+function getDistractors(correctArr, neededCount) {
+    let distractors = [];
+    let fullPool = [...allAnswersPool, ...extraTgpDistractors].sort(() => 0.5 - Math.random());
+    for (let item of fullPool) {
+        let isConflict = correctArr.some(c => c.toLowerCase().includes(item.toLowerCase()) || item.toLowerCase().includes(c.toLowerCase()));
+        if (!isConflict && !distractors.includes(item)) {
+            distractors.push(item);
+        }
+        if (distractors.length >= neededCount) break;
+    }
+    return distractors;
+}
+
+function renderQuestion() {
+    const q = selectedQuestions[currentQIndex];
+    document.getElementById('q-counter').innerText = `Вопрос ${currentQIndex + 1} из ${selectedQuestions.length}`;
+    document.getElementById('q-text').innerText = q.question;
+    const optionsContainer = document.getElementById('q-options');
+    optionsContainer.innerHTML = '';
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('feedback').style.display = 'none';
+    document.getElementById('submit-btn').style.display = 'inline-block';
+    document.getElementById('next-btn').style.display = 'none';
+    
+    let options = [...q.correctAnswers];
+    let falseOptionsCount = q.isMulti ? 3 : 3; 
+    let distractors = getDistractors(q.correctAnswers, falseOptionsCount);
+    options = options.concat(distractors);
+    options.sort(() => 0.5 - Math.random());
+    
+    let inputType = q.isMulti ? 'checkbox' : 'radio';
+    options.forEach((opt) => {
+        const label = document.createElement('label');
+        label.className = 'option-label';
+        const input = document.createElement('input');
+        input.type = inputType;
+        input.name = 'q_option';
+        input.value = opt;
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(opt));
+        optionsContainer.appendChild(label);
+    });
+}
+
+function checkAnswer() {
+    const q = selectedQuestions[currentQIndex];
+    const inputs = document.querySelectorAll('input[name="q_option"]:checked');
+    if (inputs.length === 0) {
+        alert("Пожалуйста, выберите вариант ответа.");
+        return;
+    }
+    const userAnswers = Array.from(inputs).map(inp => inp.value);
+    let isCorrect = false;
+    
+    if (q.isMulti) {
+        let matched = userAnswers.filter(ans => q.correctAnswers.includes(ans));
+        if (matched.length === q.correctAnswers.length && userAnswers.length === q.correctAnswers.length) {
+            isCorrect = true;
+        }
+    } else {
+        if (userAnswers.length === 1 && q.correctAnswers.includes(userAnswers[0])) {
+            isCorrect = true;
+        }
+    }
+    
+    const feedbackDiv = document.getElementById('feedback');
+    if (isCorrect) {
+        feedbackDiv.className = 'feedback correct';
+        feedbackDiv.innerHTML = '<b>✓ Верно!</b>';
+    } else {
+        feedbackDiv.className = 'feedback incorrect';
+        feedbackDiv.innerHTML = '<b>✗ Неверно.</b> Правильные ответы выделены зелёным.';
+    }
+
+    // Подсветка вариантов
+    document.querySelectorAll('input[name="q_option"]').forEach(inp => {
+        inp.disabled = true;
+        const label = inp.closest('label');
+        const isCorrectOpt = q.correctAnswers.includes(inp.value);
+        const isChecked = inp.checked;
+        if (isCorrectOpt) {
+            label.classList.add('is-correct');
+        } else if (isChecked && !isCorrectOpt) {
+            label.classList.add('is-wrong');
+        }
+    });
+
+    userResults.push({
+        question: q.question,
+        userAns: userAnswers.join(', '),
+        correctAns: q.correctAnswers.join(', '),
+        isCorrect: isCorrect
+    });
+    document.getElementById('submit-btn').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'inline-block';
+    
+    if (currentQIndex === selectedQuestions.length - 1) {
+        document.getElementById('next-btn').innerText = 'Завершить тест';
+    }
+}
+
+function nextQuestion() {
+    currentQIndex++;
+    if (currentQIndex < selectedQuestions.length) {
+        renderQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('results-screen').style.display = 'block';
+    
+    const correctCount = userResults.filter(r => r.isCorrect).length;
+    const total = userResults.length;
+    const percent = Math.round((correctCount / total) * 100);
+    
+    document.getElementById('score-board').innerHTML = `
+        Вы ответили верно на <span style="color: #4CAF50;">${correctCount}</span> из ${total} вопросов.<br>
+        Успешность: <b>${percent}%</b>
+    `;
+    
+    const tbody = document.getElementById('results-tbody');
+    tbody.innerHTML = '';
+    
+    userResults.forEach((res, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${res.question}</td>
+            <td>${res.userAns || '<i>Нет ответа</i>'}</td>
+            <td>${res.correctAns}</td>
+            <td class="${res.isCorrect ? 'res-correct' : 'res-incorrect'}">
+                ${res.isCorrect ? 'Верно' : 'Неверно'}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+</script>
+
+</body>
+</html>
