@@ -1,8 +1,6 @@
 # Тесты к сессии
-по всем вопросам: https://t.me/bruhbrn
+по всем вопросам: <https://t.me/bruhbrn>
 
-История России
-https://bruhbourne.github.io/istoria-testik.html
+[История России](https://bruhbourne.github.io/istoria-testik.html)
 
-ТГП
-https://bruhbourne.github.io/tgp-testik.html
+[ТГП](https://bruhbourne.github.io/tgp-testik.html)
