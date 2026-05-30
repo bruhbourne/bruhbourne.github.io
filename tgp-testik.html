@@ -33,7 +33,28 @@ h1 { margin: 0; font-size: 32px; }
 .res-correct { color: #4CAF50; font-weight: bold; }
 .res-incorrect { color: #F44336; font-weight: bold; }
 .score-board { text-align: center; font-size: 24px; margin-bottom: 30px; padding: 20px; background: #222; border-radius: 12px; }
-footer { text-align: center; padding: 30px; color: #777; }
+ .quiz-footer {
+            position: fixed;
+            bottom: 15px; /* Отступ от нижнего края экрана */
+            left: 50%;
+            transform: translateX(-50%); /* Точное центрирование по горизонтали */
+            text-align: center;
+            z-index: 1000; /* Чтобы футер всегда был поверх других элементов */
+        }
+        .quiz-footer a {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 0.95em;
+            color: #7f8c8d; /* Спокойный серый цвет */
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s, border-bottom 0.2s;
+            padding-bottom: 2px;
+            border-bottom: 1px solid transparent;
+        }
+        .quiz-footer a:hover {
+            color: #3498db; /* Меняет цвет под стиль теста */
+            border-bottom: 1px solid #3498db; /* Появляется линия подчеркивания */
+        }
 </style>
 </head>
 <body>
@@ -603,6 +624,8 @@ function showResults() {
     });
 }
 </script>
-
+<footer class="quiz-footer">
+    <a href="https://t.me/bruhbrn" target="_blank">t.me/bruhbrn</a>
+</footer>
 </body>
 </html>
