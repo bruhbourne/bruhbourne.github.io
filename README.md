@@ -1,5 +1,5 @@
 # Тесты к сессии
-t.me/bruhbrn
+по всем вопросам: https://t.me/bruhbrn
 
 История России
 https://bruhbourne.github.io/istoria-testik.html
