@@ -1,0 +1,2785 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест по философии</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Lora&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #f0ede8;
+            --card:      #ffffff;
+            --ink:       #1c1c2e;
+            --muted:     #7a7a8c;
+            --accent:    #3d5a99;
+            --accent-lt: #eef2fa;
+            --green:     #27ae60;
+            --green-lt:  #d5f5e3;
+            --red:       #e74c3c;
+            --red-lt:    #fadbd8;
+            --radius:    14px;
+            --shadow:    0 8px 32px rgba(0,0,0,0.10);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 16px 60px;
+        }
+
+        /* ── HEADER ── */
+        header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+        header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            color: var(--ink);
+            letter-spacing: .02em;
+        }
+        header p {
+            font-family: 'Lora', serif;
+            color: var(--muted);
+            font-size: .95rem;
+            margin-top: 6px;
+        }
+
+        /* ── PROGRESS ── */
+        .progress-wrap {
+            width: 100%;
+            max-width: 680px;
+            margin-bottom: 24px;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .progress-bar-track {
+            height: 6px;
+            background: #ddd;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 99px;
+            transition: width .5s cubic-bezier(.4,0,.2,1);
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 36px 40px;
+            width: 100%;
+            max-width: 680px;
+            animation: fadeSlide .35s ease;
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .q-type-badge {
+            display: inline-block;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: var(--accent-lt);
+            border-radius: 6px;
+            padding: 3px 10px;
+            margin-bottom: 14px;
+        }
+
+        .q-text {
+            font-family: 'Lora', serif;
+            font-size: 1.15rem;
+            color: var(--ink);
+            line-height: 1.65;
+            margin-bottom: 28px;
+        }
+
+        /* ── OPTIONS ── */
+        .options { display: flex; flex-direction: column; gap: 12px; }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 16px;
+            border: 2px solid #e8e8ee;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border-color .2s, background .2s, transform .15s;
+            user-select: none;
+        }
+        .option-label:hover { border-color: var(--accent); background: var(--accent-lt); transform: translateX(3px); }
+        .option-label input { accent-color: var(--accent); width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; cursor: pointer; }
+        .option-label span { font-size: .97rem; color: var(--ink); line-height: 1.5; }
+
+        /* results highlights */
+        .option-label.correct  { border-color: var(--green); background: var(--green-lt); }
+        .option-label.incorrect { border-color: var(--red);   background: var(--red-lt); }
+        .option-label.correct input,
+        .option-label.incorrect input { pointer-events: none; }
+
+        /* ── NAV ── */
+        .nav {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .2s, transform .1s, opacity .2s;
+        }
+        .btn:active { transform: scale(.97); }
+        .btn-back {
+            background: #e8e8ee;
+            color: var(--ink);
+        }
+        .btn-back:hover { background: #d8d8e4; }
+        .btn-next {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-next:hover { background: #2e4a88; }
+        .btn-submit {
+            background: #27ae60;
+            color: #fff;
+        }
+        .btn-submit:hover { background: #219150; }
+        .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+        /* ── RESULT CARD ── */
+        .result-card {
+            display: none;
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            width: 100%;
+            max-width: 680px;
+            text-align: center;
+            animation: fadeSlide .4s ease;
+        }
+        .result-card.show { display: block; }
+
+        .result-icon { font-size: 3rem; margin-bottom: 12px; }
+        .result-card h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+        .result-card .big-score {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+            margin: 16px 0;
+        }
+        .result-card .sub {
+            color: var(--muted);
+            font-size: .95rem;
+            margin-bottom: 28px;
+        }
+
+        .btn-review {
+            background: var(--accent-lt);
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            padding: 12px 28px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background .2s;
+        }
+        .btn-review:hover { background: #d6e0f5; }
+        .btn-restart {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 28px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .btn-restart:hover { background: #2e4a88; }
+
+        /* ── REVIEW MODE ── */
+        #review-container {
+            display: none;
+            width: 100%;
+            max-width: 680px;
+            flex-direction: column;
+            gap: 20px;
+        }
+        #review-container.show { display: flex; }
+        .review-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 28px 32px;
+        }
+        .review-card .q-text { margin-bottom: 16px; }
+
+        @media (max-width: 520px) {
+            .card, .result-card, .review-card { padding: 24px 18px; }
+            .nav { flex-direction: column; }
+        }
+
+        /* ── TITLE SCREEN ── */
+        #title-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 680px;
+            animation: fadeSlide .45s ease;
+        }
+        .title-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 56px 48px 48px;
+            width: 100%;
+            text-align: center;
+        }
+        .title-logo { font-size: 3.2rem; margin-bottom: 20px; }
+        .title-main {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.9rem, 5vw, 2.8rem);
+            color: var(--ink);
+            letter-spacing: .02em;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+        .title-divider {
+            width: 48px; height: 3px;
+            background: var(--accent);
+            border-radius: 99px;
+            margin: 18px auto 22px;
+        }
+        .title-sub {
+            font-family: 'Lora', serif;
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.75;
+            margin-bottom: 36px;
+        }
+        .title-sub strong { color: var(--ink); font-style: italic; }
+        .btn-start {
+            display: inline-block;
+            padding: 15px 52px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: .03em;
+            transition: background .2s, transform .15s;
+        }
+        .btn-start:hover  { background: #2e4a88; }
+        .btn-start:active { transform: scale(.97); }
+
+        /* ── ANSWERS TABLE ── */
+        .answers-wrap {
+            display: none;
+            width: 100%;
+            max-width: 680px;
+            margin-top: 20px;
+            animation: fadeSlide .4s ease;
+        }
+        .answers-wrap.show { display: block; }
+        .answers-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 28px 32px;
+            overflow-x: auto;
+        }
+        .answers-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--ink);
+            margin-bottom: 20px;
+        }
+        .ans-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .86rem;
+        }
+        .ans-table th {
+            text-align: left;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border-bottom: 2px solid #e8e8ee;
+            padding: 6px 10px 10px;
+            white-space: nowrap;
+        }
+        .ans-table td {
+            padding: 10px 10px;
+            border-bottom: 1px solid #f0f0f5;
+            vertical-align: top;
+            line-height: 1.45;
+            color: var(--ink);
+        }
+        .ans-table tr:last-child td { border-bottom: none; }
+        .ans-table tr.row-ok   { background: #f5fef8; }
+        .ans-table tr.row-bad  { background: #fff8f7; }
+        .ans-num  { width: 32px; color: var(--muted); font-weight: 700; text-align: center; }
+        .ans-q    { max-width: 200px; }
+        .ans-a    { max-width: 140px; }
+        .ans-v    { width: 36px; text-align: center; font-size: 1.05rem; font-weight: 700; }
+        .ans-v.ok  { color: var(--green); }
+        .ans-v.bad { color: var(--red); }
+        .ans-correct-text { color: var(--green); font-size: .8rem; margin-top: 3px; }
+
+        @media (max-width: 520px) {
+            .title-card  { padding: 36px 20px 32px; }
+            .answers-card { padding: 20px 12px; }
+            .ans-table   { font-size: .78rem; }
+            .btn-start   { padding: 13px 36px; font-size: 1rem; }
+        }
+        /* Стили для фиксированного футера */
+        .quiz-footer {
+            position: fixed;
+            bottom: 15px; /* Отступ от нижнего края экрана */
+            left: 50%;
+            transform: translateX(-50%); /* Точное центрирование по горизонтали */
+            text-align: center;
+            z-index: 1000; /* Чтобы футер всегда был поверх других элементов */
+        }
+        .quiz-footer a {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 0.95em;
+            color: #7f8c8d; /* Спокойный серый цвет */
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s, border-bottom 0.2s;
+            padding-bottom: 2px;
+            border-bottom: 1px solid transparent;
+        }
+        .quiz-footer a:hover {
+            color: #3498db; /* Меняет цвет под стиль теста */
+            border-bottom: 1px solid #3498db; /* Появляется линия подчеркивания */
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- Title screen -->
+<div id="title-screen">
+    <div class="title-card">
+        <div class="title-logo">📖</div>
+        <h1 class="title-main">Тест по Философии</h1>
+        <div class="title-divider"></div>
+        <p class="title-sub">
+            На одну попытку будут случайно выбраны<br>
+            <strong>20 вопросов из 200</strong>
+        </p>
+        <button class="btn-start" onclick="startQuiz()">Начать тест →</button>
+    </div>
+</div>
+
+<header id="main-header" style="display:none">
+    <h1>Тест по философии</h1>
+</header>
+
+<!-- Progress -->
+<div class="progress-wrap" id="progress-wrap" style="display:none">
+    <div class="progress-label">
+        <span id="progress-text">Вопрос 1 из 20</span>
+        <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+</div>
+
+<!-- Question card -->
+<div class="card" id="question-card" style="display:none">
+    <div class="q-type-badge" id="q-badge"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options-container"></div>
+    <div class="nav">
+        <button class="btn btn-back" id="btn-back" onclick="goBack()">← Назад</button>
+        <button class="btn btn-next" id="btn-next" onclick="goNext()">Далее →</button>
+        <button class="btn btn-submit" id="btn-submit" onclick="submitQuiz()" style="display:none">Узнать результат</button>
+    </div>
+</div>
+
+<!-- Result -->
+<div class="result-card" id="result-card">
+    <div class="result-icon" id="result-icon"></div>
+    <h2>Ваш результат</h2>
+    <div class="big-score" id="big-score"></div>
+    <div class="sub" id="result-sub"></div>
+    <button class="btn-review" onclick="showReview()">Разбор ошибок</button>
+    <button class="btn-restart" onclick="restartQuiz()">Пройти заново</button>
+</div>
+
+<!-- Answers table -->
+<div class="answers-wrap" id="answers-wrap">
+    <div class="answers-card">
+        <h3>Таблица ответов</h3>
+        <table class="ans-table">
+            <thead>
+                <tr>
+                    <th class="ans-num">№</th>
+                    <th class="ans-q">Вопрос</th>
+                    <th class="ans-a">Ваш ответ</th>
+                    <th class="ans-a">Правильный ответ</th>
+                    <th class="ans-v"></th>
+                </tr>
+            </thead>
+            <tbody id="answers-tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Review -->
+<div id="review-container"></div>
+
+<script>
+// ─── КОЛ-ВО ВОПРОСОВ В ОДНОЙ СЕССИИ ───────────────────
+const QUIZ_SIZE = 20;
+
+// ─── ПОЛНЫЙ ПУЛ ВОПРОСОВ ───────────────────────────────
+// Добавляйте новые вопросы сюда — в начало, конец или середину,
+// порядок не важен: каждый раз будут выбираться случайные QUIZ_SIZE.
+// Числовые префиксы в тексте не нужны — нумерация идёт через прогресс-бар.
+const ALL_QUESTIONS = [
+    {
+        text: "Что является предметом философии согласно классическому (марксистскому) определению?",
+        type: "radio",
+        options: [
+            { text: "А) Изучение текстов Священного Писания", correct: false },
+            { text: "Б) Наиболее общие и фундаментальные законы природы, общества и мышления", correct: true },
+            { text: "В) Поиск смысла жизни отдельного индивида", correct: false },
+            { text: "Г) Законы развития исключительно человеческого общества", correct: false }
+        ]
+    },
+    {
+        text: "Какие из перечисленных разделов относятся к структуре философии?",
+        type: "checkbox",
+        options: [
+            { text: "А) Онтология", correct: true },
+            { text: "Б) Гносеология", correct: true },
+            { text: "В) Астрология", correct: false },
+            { text: "Г) Аксиология", correct: true }
+        ]
+    },
+    {
+        text: "Как звучит основной вопрос философии?",
+        type: "radio",
+        options: [
+            { text: "А) В чем смысл жизни?", correct: false },
+            { text: "Б) Что первично — материя или сознание?", correct: true },
+            { text: "В) Что есть истина?", correct: false },
+            { text: "Г) Познаваем ли мир?", correct: false }
+        ]
+    },
+    {
+        text: "Какие формы дуализма получили распространение в Новое время?",
+        type: "checkbox",
+        options: [
+            { text: "А) Деизм", correct: true },
+            { text: "Б) Объективный идеализм", correct: false },
+            { text: "В) Пантеизм", correct: true },
+            { text: "Г) Наивный материализм", correct: false }
+        ]
+    },
+    {
+        text: "Какие из перечисленных функций относятся к основным или дополнительным функциям философии?",
+        type: "checkbox",
+        options: [
+            { text: "А) Формирование мировоззрения", correct: true },
+            { text: "Б) Методологическая", correct: true },
+            { text: "В) Критическая", correct: true },
+            { text: "Г) Вычислительная", correct: false }
+        ]
+    },
+    {
+        text: "Какой тезис характерен для научного (диалектического) материализма К. Маркса и Ф. Энгельса?",
+        type: "radio",
+        options: [
+            { text: "А) Бытие определяет сознание", correct: true },
+            { text: "Б) Сознание определяет бытие", correct: false },
+            { text: "В) Мир создан демиургом", correct: false },
+            { text: "Г) Душа человека бессмертна", correct: false }
+        ]
+    },
+    {
+        text: "Какая философская позиция Нового времени выражается формулой «Бог есть всё, и всё есть Бог» (Б. Спиноза)?",
+        type: "radio",
+        options: [
+            { text: "А) Деизм", correct: false },
+            { text: "Б) Пантеизм", correct: true },
+            { text: "В) Объективный идеализм", correct: false },
+            { text: "Г) Агностицизм", correct: false }
+        ]
+    },
+    {
+        text: "Как называется устоявшаяся система взглядов на мир, когда речь идет о больших социальных группах?",
+        type: "radio",
+        options: [
+            { text: "А) Аксиология", correct: false },
+            { text: "Б) Эпистемология", correct: false },
+            { text: "В) Менталитет", correct: true },
+            { text: "Г) Правосознание", correct: false }
+        ]
+    },
+    {
+        text: "Что принципиально отличает философское мышление от мифологического и религиозного?",
+        type: "checkbox",
+        options: [
+            { text: "А) Философия строится на логике и аргументации", correct: true },
+            { text: "Б) Философия иррациональна в своей основе", correct: false },
+            { text: "В) Философия требует доказательств и обоснований", correct: true },
+            { text: "Г) Философия принимает мир как данность, не требуя доказательств", correct: false }
+        ]
+    },
+    {
+        text: "Какая философская концепция является основой универсальных правовых норм в юриспруденции (согласно лекциям)?",
+        type: "radio",
+        options: [
+            { text: "А) Сократовская майевтика", correct: false },
+            { text: "Б) Категорический императив И. Канта", correct: true },
+            { text: "В) Пантеизм Б. Спинозы", correct: false },
+            { text: "Г) Субъективный идеализм Дж. Беркли", correct: false }
+        ]
+    },
+    {
+        text: "Какие черты, согласно Аристотелю и логике, характерны для понятийного мышления?",
+        type: "checkbox",
+        options: [
+            { text: "А) Абстрактность", correct: true },
+            { text: "Б) Доказательность", correct: true },
+            { text: "В) Опора на стереотипы", correct: false },
+            { text: "Г) Эмоционально-образное описание", correct: false }
+        ]
+    },
+    {
+        text: "Кто из мыслителей относился к Милетской школе и какие первоосновы они предлагали?",
+        type: "checkbox",
+        options: [
+            { text: "А) Фалес Милетский (вода)", correct: true },
+            { text: "Б) Гераклит (огонь)", correct: false },
+            { text: "В) Анаксимен (воздух)", correct: true },
+            { text: "Г) Пифагор (число)", correct: false }
+        ]
+    },
+    {
+        text: "Как в античной гносеологии называлось ненадежное знание, основанное на ощущениях?",
+        type: "radio",
+        options: [
+            { text: "А) Эпистеме", correct: false },
+            { text: "Б) Докса", correct: true },
+            { text: "В) Логос", correct: false },
+            { text: "Г) Апейрон", correct: false }
+        ]
+    },
+    {
+        text: "Какие elements составляют принципы сократовской диалектики?",
+        type: "checkbox",
+        options: [
+            { text: "А) Ирония", correct: true },
+            { text: "Б) Майевтика", correct: true },
+            { text: "В) Дедукция", correct: false },
+            { text: "Г) Признание незнания", correct: true }
+        ]
+    },
+    {
+        text: "Какой закон диалектики объясняет развитие через механизм «тезис — антитезис — синтез»?",
+        type: "radio",
+        options: [
+            { text: "А) Закон перехода количества в качество", correct: false },
+            { text: "Б) Закон единства и борьбы противоположностей", correct: false },
+            { text: "В) Закон отрицания отрицания", correct: true },
+            { text: "Г) Закон тождества", correct: false }
+        ]
+    },
+    {
+        text: "С помощью каких категорий диалектики в юриспруденции анализируются мнимые сделки?",
+        type: "radio",
+        options: [
+            { text: "А) Форма и содержание", correct: false },
+            { text: "Б) Сущность и явление", correct: true },
+            { text: "В) Необходимость и случайность", correct: false },
+            { text: "Г) Возможность и действительность", correct: false }
+        ]
+    },
+    {
+        text: "Как категории «возможность» и «действительность» применяются в юридическом мышлении?",
+        type: "checkbox",
+        options: [
+            { text: "А) При разграничении умысла и неосторожности", correct: false },
+            { text: "Б) При квалификации покушения на преступление", correct: true },
+            { text: "В) Для разграничения реального и потенциального вреда", correct: true },
+            { text: "Г) При толковании «буквы» и «духа» закона", correct: false }
+        ]
+    },
+    {
+        text: "Представители какой сократической школы считали, что главное препятствие счастью — это страх смерти, и призывали к умеренному наслаждению?",
+        type: "radio",
+        options: [
+            { text: "А) Киники", correct: false },
+            { text: "Б) Киренаики", correct: false },
+            { text: "В) Эпикурейцы", correct: true },
+            { text: "Г) Стоики", correct: false }
+        ]
+    },
+    {
+        text: "Какие утверждения о сущности человека характерны для философии экзистенциализма XX века?",
+        type: "checkbox",
+        options: [
+            { text: "А) Человек обречён быть свободным", correct: true },
+            { text: "Б) Сущность человека задана ему Богом с рождения", correct: false },
+            { text: "В) Человек создаёт себя своими выборами", correct: true },
+            { text: "Г) Поведением человека управляет исключительно бессознательное", correct: false }
+        ]
+    },
+    {
+        text: "Какова последовательность этапов развития человека согласно концепции антропосоциогенеза Ф. Энгельса?",
+        type: "radio",
+        options: [
+            { text: "А) Сознание → речь → труд → рука", correct: false },
+            { text: "Б) Рука → труд → речь → сознание", correct: true },
+            { text: "В) Труд → сознание → речь → рука", correct: false },
+            { text: "Г) Речь → сознание → рука → труд", correct: false }
+        ]
+    },
+    {
+        text: "Какие из перечисленных направлений относятся к основным гносеологическим позициям?",
+        type: "checkbox",
+        options: [
+            { text: "А) Гносеологический оптимизм (позитивизм)", correct: true },
+            { text: "Б) Агностицизм", correct: true },
+            { text: "В) Гностицизм", correct: true },
+            { text: "Г) Абсентеизм", correct: false }
+        ]
+    },
+    {
+        text: "Кому из философов принадлежит идея о том, что человек рождается как «чистый лист» (tabula rasa), и все знания приходят из опыта?",
+        type: "radio",
+        options: [
+            { text: "А) Р. Декарт", correct: false },
+            { text: "Б) Дж. Локк", correct: true },
+            { text: "В) И. Кант", correct: false },
+            { text: "Г) Б. Спиноза", correct: false }
+        ]
+    },
+    {
+        text: "Что из перечисленного И. Кант относил к принципиально непознаваемым ноуменам («вещам в себе»)?",
+        type: "checkbox",
+        options: [
+            { text: "А) Бог", correct: true },
+            { text: "Б) Свобода воли", correct: true },
+            { text: "В) Пространство", correct: false },
+            { text: "Г) Бессмертие души", correct: true }
+        ]
+    },
+    {
+        text: "Какая концепция истины лежит в основе судопроизводства (установление фактических обстоятельств дела)?",
+        type: "radio",
+        options: [
+            { text: "А) Когерентная", correct: false },
+            { text: "Б) Прагматическая", correct: false },
+            { text: "В) Конвенциональная", correct: false },
+            { text: "Г) Корреспондентная (классическая)", correct: true }
+        ]
+    },
+    {
+        text: "Какие методы относятся к теоретическому уровню научного познания?",
+        type: "checkbox",
+        options: [
+            { text: "А) Измерение", correct: false },
+            { text: "Б) Абстрагирование", correct: true },
+            { text: "В) Идеализация", correct: true },
+            { text: "Г) Наблюдение", correct: false }
+        ]
+    },
+    {
+        text: "Какие два атрибута единой субстанции (Бога-Природы), согласно Б. Спинозе, доступны человеку?",
+        type: "radio",
+        options: [
+            { text: "А) Форма и содержание", correct: false },
+            { text: "Б) Протяжение и мышление", correct: true },
+            { text: "В) Необходимость и случайность", correct: false },
+            { text: "Г) Пространство и время", correct: false }
+        ]
+    },
+    {
+        text: "Какие две независимые субстанции выделял Р. Декарт в рамках своего дуализма?",
+        type: "checkbox",
+        options: [
+            { text: "А) Мыслящая (душа)", correct: true },
+            { text: "Б) Идеальная (абсолютный дух)", correct: false },
+            { text: "В) Протяжённая (тело)", correct: true },
+            { text: "Г) Божественная", correct: false }
+        ]
+    },
+    {
+        text: "Как И. Кант называл поступок, который соответствует закону, но совершён из страха наказания или ради выгоды?",
+        type: "radio",
+        options: [
+            { text: "А) Аморальный", correct: false },
+            { text: "Б) Легальный", correct: true },
+            { text: "В) Категорический", correct: false },
+            { text: "Г) Моральный", correct: false }
+        ]
+    },
+    {
+        text: "Какие утверждения о культуре верны с философской точки зрения?",
+        type: "checkbox",
+        options: [
+            { text: "А) Культура — это «вторая натура», противостоящая первой", correct: true },
+            { text: "Б) В основе культуры лежит бессознательное", correct: false },
+            { text: "В) Культура включает в себя как материальные, так и духовные ценности", correct: true },
+            { text: "Г) Культура основана на инстинктивном поведении", correct: false }
+        ]
+    },
+    {
+        text: "Какое ключевое понятие ввел Н. Данилевский в рамках цивилизационного подхода к истории?",
+        type: "radio",
+        options: [
+            { text: "А) Общественно-экономическая формация", correct: false },
+            { text: "Б) Культурно-исторический тип", correct: true },
+            { text: "В) Пассионарность", correct: false },
+            { text: "Г) Коллективное бессознательное", correct: false }
+        ]
+    },
+    {
+        text: "Какие философские идеи классической философии права верно соотнесены с их авторами?",
+        type: "checkbox",
+        options: [
+            { text: "А) Т. Гоббс: естественное состояние — это «война всех против всех»", correct: true },
+            { text: "Б) Дж. Локк: естественные права — это право на жизнь, свободу и собственность", correct: true },
+            { text: "В) Ш. Монтескьё: теория разделения властей", correct: true },
+            { text: "Г) Ж.-Ж. Руссо: право — это проявление воли к власти", correct: false }
+        ]
+    },
+    {
+        text: "Какой неклассической школе философии права принадлежит утверждение, что право коренится в психике индивида и существует как «интуитивное право» (Л. Петражицкий)?",
+        type: "radio",
+        options: [
+            { text: "А) Позитивизм", correct: false },
+            { text: "Б) Социологическая школа", correct: false },
+            { text: "В) Экзистенциалистская философия", correct: false },
+            { text: "Г) Психологическая школа", correct: true }
+        ]
+    },
+    {
+        text: "В чём суть принципа «герменевтического круга» в юридической герменевтике?",
+        type: "radio",
+        options: [
+            { text: "А) Норму можно понять только изолированно от всей системы права", correct: false },
+            { text: "Б) Для понимания части нужно понять целое, и для понимания целого необходимо понять его части", correct: true },
+            { text: "В) Право всегда движется по спирали истории", correct: false },
+            { text: "Г) Истинное толкование текста доступно только автору этого текста", correct: false }
+        ]
+    },
+    {
+        text: "Какие задачи стоят перед философией права?",
+        type: "checkbox",
+        options: [
+            { text: "А) Онтологическая (выяснить природу и основания права)", correct: true },
+            { text: "Б) Антропологическая (определить место человека в правовой системе)", correct: true },
+            { text: "В) Аксиологическая (определить ценности права)", correct: true },
+            { text: "Г) Тактическая (написать конкретный закон)", correct: false }
+        ]
+    },
+    {
+        text: "Какой вопрос является основным для философии права?",
+        type: "radio",
+        options: [
+            { text: "А) Что первично — право или государство?", correct: true },
+            { text: "Б) Что первично — материя или сознание?", correct: false },
+            { text: "В) Познаваем ли мир?", correct: false },
+            { text: "Г) Каковы критерии красоты?", correct: false }
+        ]
+    },
+    {
+        text: "Какие проблемы относятся к экологическим глобальным проблемам человечества?",
+        type: "checkbox",
+        options: [
+            { text: "А) Климатические изменения", correct: true },
+            { text: "Б) Исчерпание природных ресурсов", correct: true },
+            { text: "В) Угроза мировой войны", correct: false },
+            { text: "Г) Загрязнение биосферы", correct: true }
+        ]
+    },
+    {
+        text: "Какая структура психики по З. Фрейду представляет собой систему запретов, моральных норм и делает нас людьми?",
+        type: "radio",
+        options: [
+            { text: "А) Оно (Ид)", correct: false },
+            { text: "Б) Я (Эго)", correct: false },
+            { text: "В) Сверх-Я (Супер-Эго)", correct: true },
+            { text: "Г) Самость", correct: false }
+        ]
+    },
+    {
+        text: "Какие из перечисленных понятий относятся к архетипам в концепции коллективного бессознательного К. Юнга?",
+        type: "checkbox",
+        options: [
+            { text: "А) Тень", correct: true },
+            { text: "Б) Мудрец", correct: true },
+            { text: "В) Либидо", correct: false },
+            { text: "Г) Герой", correct: true }
+        ]
+    },
+    {
+        text: "Как И. Кант называл безусловное повеление, которое должно выполняться всегда, независимо от желаний и обстоятельств?",
+        type: "radio",
+        options: [
+            { text: "А) Гипотетический императив", correct: false },
+            { text: "Б) Категорический императив", correct: true },
+            { text: "В) Правовой обычай", correct: false },
+            { text: "Г) Легальный поступок", correct: false }
+        ]
+    },
+    {
+        text: "Что, согласно формационной концепции истории К. Маркса, относится к общественной надстройке?",
+        type: "checkbox",
+        options: [
+            { text: "А) Политика", correct: true },
+            { text: "Б) Право", correct: true },
+            { text: "В) Способ производства", correct: false },
+            { text: "Г) Мораль", correct: true }
+        ]
+    },
+    {
+        text: "Как называется форма субкультуры, активно противостоящая доминирующей культуре?",
+        type: "radio",
+        options: [
+            { text: "А) Аномия", correct: false },
+            { text: "Б) Контркультура", correct: true },
+            { text: "В) Цивилизация", correct: false },
+            { text: "Г) Менталитет", correct: false }
+        ]
+    },
+    {
+        text: "Какие концепции истины выделяются в философии?",
+        type: "checkbox",
+        options: [
+            { text: "А) Корреспондентная", correct: true },
+            { text: "Б) Когерентная", correct: true },
+            { text: "В) Прагматическая", correct: true },
+            { text: "Г) Иллюзорная", correct: false }
+        ]
+    },
+    {
+        text: "Кто из философов утверждал, что человек рождается как \"чистый лист\" (tabula rasa)?",
+        type: "radio",
+        options: [
+            { text: "А) Р. Декарт", correct: false },
+            { text: "Б) Дж. Локк", correct: true },
+            { text: "В) И. Кант", correct: false },
+            { text: "Г) Д. Юм", correct: false }
+        ]
+    },
+    {
+        text: "Какие утверждения относятся к марксистской философии права?",
+        type: "checkbox",
+        options: [
+            { text: "А) Право — это надстройка над экономическим базисом", correct: true },
+            { text: "Б) Право — это выраженная в законах воля господствующего класса", correct: true },
+            { text: "В) В коммунизме государство и право отомрут", correct: true },
+            { text: "Г) Право и свобода находятся в неизбежном экзистенциальном конфликте", correct: false }
+        ]
+    },
+    {
+        text: "Что, согласно законам диалектики, является источником любого развития?",
+        type: "radio",
+        options: [
+            { text: "А) Внутреннее противоречие", correct: true },
+            { text: "Б) Божественное вмешательство", correct: false },
+            { text: "В) Внешнее механическое воздействие", correct: false },
+            { text: "Г) Случайность", correct: false }
+        ]
+    },
+    {
+        text: "Какие мыслители заложили основы или являются яркими представителями позиции агностицизма?",
+        type: "checkbox",
+        options: [
+            { text: "А) Дж. Беркли", correct: true },
+            { text: "Б) Д. Юм", correct: true },
+            { text: "В) И. Кант", correct: true },
+            { text: "Г) О. Конт", correct: false }
+        ]
+    },
+    {
+        text: "Каческому мыслителю принадлежит пассионарная теория этногенеза?",
+        type: "radio",
+        options: [
+            { text: "А) Н. Данилевский", correct: false },
+            { text: "Б) Л. Гумилёв", correct: true },
+            { text: "В) О. Шпенглер", correct: false },
+            { text: "Г) А. Тойнби", correct: false }
+        ]
+    },
+    {
+        text: "В чем заключаются особенности мифологического мышления?",
+        type: "checkbox",
+        options: [
+            { text: "А) Не требует доказательств и принимается как аксиома", correct: true },
+            { text: "Б) Является образным, а не понятийным", correct: true },
+            { text: "В) Строится на логике и аргументации", correct: false },
+            { text: "Г) Смешивает реальное и фантастическое", correct: true }
+        ]
+    },
+    {
+        text: "Какой философ сформулировал позитивистскую схему развития познания: «миф → философия → наука»?",
+        type: "radio",
+        options: [
+            { text: "А) И. Кант", correct: false },
+            { text: "Б) О. Конт", correct: true },
+            { text: "В) К. Маркс", correct: false },
+            { text: "Г) К. Поппер", correct: false }
+        ]
+    },
+    {
+        text: "Какие виды свободы выделял И. Кант в своей практической философии?",
+        type: "checkbox",
+        options: [
+            { text: "А) Отрицательная свобода (свобода \"от\")", correct: true },
+            { text: "Б) Положительная свобода (свобода \"для\")", correct: true },
+            { text: "В) Трансцендентальная свобода", correct: true },
+            { text: "Г) Свобода как произвол желаний", correct: false }
+        ]
+    },
+    {
+        text: "Как И. Кант называл мир «вещей в себе», который существует независимо от нашего восприятия и принципиально непознаваем?",
+        type: "radio",
+        options: [
+            { text: "А) Феномены", correct: false },
+            { text: "Б) Ноумены", correct: true },
+            { text: "В) Антиномии", correct: false },
+            { text: "Г) Априори", correct: false }
+        ]
+    },
+    {
+        text: "Какие методы познания относятся к эмпирическому уровню научного познания?",
+        type: "checkbox",
+        options: [
+            { text: "А) Наблюдение", correct: true },
+            { text: "Б) Описание", correct: true },
+            { text: "В) Абстрагирование", correct: false },
+            { text: "Г) Эксперимент", correct: true }
+        ]
+    },
+    {
+        text: "Какой принцип по К. Попперу определяет границу между научным и вненаучным знанием?",
+        type: "radio",
+        options: [
+            { text: "А) Принцип верификации", correct: false },
+            { text: "Б) Принцип фальсифицируемости", correct: true },
+            { text: "В) Принцип историзма", correct: false },
+            { text: "Г) Принцип объективности", correct: false }
+        ]
+    },
+    {
+        text: "Что из перечисленного входит в элементы структуры теоретического знания?",
+        type: "checkbox",
+        options: [
+            { text: "А) Понятие", correct: true },
+            { text: "Б) Суждение", correct: true },
+            { text: "В) Умозаключение (силлогизм)", correct: true },
+            { text: "Г) Непосредственное измерение", correct: false }
+        ]
+    },
+    {
+        text: "Какая сократическая школа утверждала, что главное благо — это автаркия (самодостаточность) и жизнь в соответствии с природой, с отказом от условностей общества?",
+        type: "radio",
+        options: [
+            { text: "А) Киренаики", correct: false },
+            { text: "Б) Эпикурейцы", correct: false },
+            { text: "В) Стоики", correct: false },
+            { text: "Г) Киники", correct: true }
+        ]
+    },
+    {
+        text: "Из каких начал, согласно Аристотелю, составляется бытие?",
+        type: "checkbox",
+        options: [
+            { text: "А) Форма (сущность)", correct: true },
+            { text: "Б) Материя (substрат)", correct: true },
+            { text: "В) Действие (процесс)", correct: true },
+            { text: "Г) Мир неподвижных идей (эйдосов)", correct: false }
+        ]
+    },
+    {
+        text: "Какая философская позиция (характерная, в том числе, для Спинозы и марксизма) утверждает, что любая случайность — это лишь непознанная закономерность?",
+        type: "radio",
+        options: [
+            { text: "А) Индетерминизм", correct: false },
+            { text: "Б) Детерминизм", correct: true },
+            { text: "В) Скептицизм", correct: false },
+            { text: "Г) Солипсизм", correct: false }
+        ]
+    },
+    {
+        text: "Какие основные свойства характерны для причинно-следственной связи?",
+        type: "checkbox",
+        options: [
+            { text: "А) Объективность", correct: true },
+            { text: "Б) Всеобщность", correct: true },
+            { text: "В) Симметрия во времени", correct: false },
+            { text: "Г) Асимметрия (причина предшествует следствию)", correct: true }
+        ]
+    },
+    {
+        text: "Какая пара категорий диалектики используется в юридическом мышлении при анализе соотношения «буквы» и «духа» закона?",
+        type: "radio",
+        options: [
+            { text: "А) Необходимость и случайность", correct: false },
+            { text: "Б) Форма и содержание", correct: true },
+            { text: "В) Возможность и действительность", correct: false },
+            { text: "Г) Причина и следствие", correct: false }
+        ]
+    },
+    {
+        text: "Какие исторические типы (уровни) мировоззрения традиционно выделяются?",
+        type: "checkbox",
+        options: [
+            { text: "А) Мифологическое", correct: true },
+            { text: "Б) Религиозное", correct: true },
+            { text: "В) Научное", correct: true },
+            { text: "Г) Психоаналитическое", correct: false }
+        ]
+    },
+    {
+        text: "В какой геополитической концепции Россия рассматривается как «хартленд» (сердце земли)?",
+        type: "radio",
+        options: [
+            { text: "А) Концепция А. Тойнби", correct: false },
+            { text: "Б) Концепция Х. Маккиндера", correct: true },
+            { text: "В) Концепция З. Бжезинского", correct: false },
+            { text: "Г) Концепция С. Хантингтона", correct: false }
+        ]
+    },
+    {
+        text: "Какие методы толкования применяются в юридической герменевтике?",
+        type: "checkbox",
+        options: [
+            { text: "А) Грамматическое (языковое)", correct: true },
+            { text: "Б) Логическое", correct: true },
+            { text: "В) Систематическое", correct: true },
+            { text: "Г) Мифологическое", correct: false }
+        ]
+    },
+    {
+        text: "Какому представителю социологической школы права принадлежит утверждение: «Право — это то, что делают суды»?",
+        type: "radio",
+        options: [
+            { text: "А) Л. Петражицкий", correct: false },
+            { text: "Б) О. Холмс", correct: true },
+            { text: "В) К. Маркс", correct: false },
+            { text: "Г) Ф. Ницше", correct: false }
+        ]
+    },
+    {
+        text: "Кто из мыслителей относится к представителям классической философии права?",
+        type: "checkbox",
+        options: [
+            { text: "А) Т. Гоббс", correct: true },
+            { text: "Б) Дж. Локк", correct: true },
+            { text: "В) Ш. Монтескьё", correct: true },
+            { text: "Г) Л. Петражицкий", correct: false }
+        ]
+    },
+    {
+        text: "Какой метод познания Сократ называл «повивальным искусством»?",
+        type: "radio",
+        options: [
+            { text: "А) Дедукцию", correct: false },
+            { text: "Б) Майевтику", correct: true },
+            { text: "В) Эмпиризм", correct: false },
+            { text: "Г) Софистику", correct: false }
+        ]
+    },
+    {
+        text: "Какие три основных закона диалектики выделяются в философии?",
+        type: "checkbox",
+        options: [
+            { text: "А) Единство и борьба противоположностей", correct: true },
+            { text: "Б) Переход количества в качество", correct: true },
+            { text: "В) Отрицание отрицания", correct: true },
+            { text: "Г) Закон тождества", correct: false }
+        ]
+    },
+    {
+        text: "Кто ввёл термин «философия» (любовь к мудрости)?",
+        type: "radio",
+        options: [
+            { text: "А) Фалес", correct: false },
+            { text: "Б) Пифагор", correct: true },
+            { text: "В) Сократ", correct: false },
+            { text: "Г) Аристотель", correct: false }
+        ]
+    },
+    {
+        text: "Какие компоненты входят в структуру психики согласно З. Фрейду?",
+        type: "checkbox",
+        options: [
+            { text: "А) Оно (Ид)", correct: true },
+            { text: "Б) Я (Эго)", correct: true },
+            { text: "В) Сверх-Я (Супер-Эго)", correct: true },
+            { text: "Г) Архетипы", correct: false }
+        ]
+    },
+    {
+        text: "Как Спиноза определял свободу?",
+        type: "radio",
+        options: [
+            { text: "А) Как абсолютный произвол воли", correct: false },
+            { text: "Б) Как познанную необходимость", correct: true },
+            { text: "В) Как отсутствие всяких законов", correct: false },
+            { text: "Г) Как право сильного", correct: false }
+        ]
+    },
+    {
+        text: "Какие методы толкования применяются в юридической герменевтике?",
+        type: "checkbox",
+        options: [
+            { text: "А) Грамматическое", correct: true },
+            { text: "Б) Логическое", correct: true },
+            { text: "В) Систематическое", correct: true },
+            { text: "Г) Архетипическое", correct: false }
+        ]
+    },
+    {
+        text: "Кто из философов утверждал, что человек рождается «чистым листом» (tabula rasa)?",
+        type: "radio",
+        options: [
+            { text: "А) Р. Декарт", correct: false },
+            { text: "Б) Дж. Локк", correct: true },
+            { text: "В) И. Кант", correct: false },
+            { text: "Г) Г. Гегель", correct: false }
+        ]
+    },
+    {
+        text: "Какие мыслители относятся к представителям Элейской школы?",
+        type: "checkbox",
+        options: [
+            { text: "А) Ксенофан", correct: true },
+            { text: "Б) Парменид", correct: true },
+            { text: "В) Зенон", correct: true },
+            { text: "Г) Демокрит", correct: false }
+        ]
+    },
+    {
+        text: "Что является «категорическим императивом» И. Канта?",
+        type: "radio",
+        options: [
+            { text: "А) Выгода как основа поведения", correct: false },
+            { text: "Б) Безусловное нравственное повеление", correct: true },
+            { text: "В) Желание получить удовольствие", correct: false },
+            { text: "Г) Приказ правителя", correct: false }
+        ]
+    },
+    {
+        text: "Какие черты характерны для мифологического мышления?",
+        type: "checkbox",
+        options: [
+            { text: "А) Образность", correct: true },
+            { text: "Б) Смешение реального и фантастического", correct: true },
+            { text: "В) Отсутствие доказательств", correct: true },
+            { text: "Г) Рациональная аргументация", correct: false }
+        ]
+    },
+    {
+        text: "Что, согласно марксизму, является фундаментом (базисом) общества?",
+        type: "radio",
+        options: [
+            { text: "А) Право", correct: false },
+            { text: "Б) Экономические отношения (способ производства)", correct: true },
+            { text: "В) Религия", correct: false },
+            { text: "Г) Искусство", correct: false }
+        ]
+    },
+    {
+        text: "Какие концепции истины выделяются в философии?",
+        type: "checkbox",
+        options: [
+            { text: "А) Корреспондентная", correct: true },
+            { text: "Б) Когерентная", correct: true },
+            { text: "В) Прагматическая", correct: true },
+            { text: "Г) Феноменологическая", correct: false }
+        ]
+    },
+    {
+        text: "Какова позиция Аристотеля в отношении «мира идей» Платона?",
+        type: "radio",
+        options: [
+            { text: "А) Полностью поддерживал", correct: false },
+            { text: "Б) Критиковал, утверждая, что формы неотделимы от материи", correct: true },
+            { text: "В) Считал его более реальным, чем материальный мир", correct: false },
+            { text: "Г) Считал его плодом воображения", correct: false }
+        ]
+    },
+    {
+        text: "Какие группы проблем относятся к глобальным проблемам человечества?",
+        type: "checkbox",
+        options: [
+            { text: "А) Угроза мировой войны", correct: true },
+            { text: "Б) Экологические проблемы", correct: true },
+            { text: "В) Демографические проблемы", correct: true },
+            { text: "Г) Проблема выбора профессии", correct: false }
+        ]
+    },
+    {
+        text: "Что является основным вопросом философии?",
+        type: "radio",
+        options: [
+            { text: "А) Что первично: материя или сознание?", correct: true },
+            { text: "Б) Какова природа красоты?", correct: false },
+            { text: "В) Как создать справедливое государство?", correct: false },
+            { text: "Г) Существует ли Бог?", correct: false }
+        ]
+    },
+    {
+        text: "Какие характеристики присущи религиозному мышлению?",
+        type: "checkbox",
+        options: [
+            { text: "А) Основано на вере в сверхъестественное", correct: true },
+            { text: "Б) Принципиально недоказуемо", correct: true },
+            { text: "В) Иерархичность", correct: true },
+            { text: "Г) Опирается на научный эксперимент", correct: false }
+        ]
+    },
+    {
+        text: "Что Б. Спиноза называл субстанцией?",
+        type: "radio",
+        options: [
+            { text: "А) Человеческую душу", correct: false },
+            { text: "Б) Бог-Природу", correct: true },
+            { text: "В) Материальные объекты", correct: false },
+            { text: "Г) Числа", correct: false }
+        ]
+    },
+    {
+        text: "Какие методы научного познания относятся к эмпирическому уровню?",
+        type: "checkbox",
+        options: [
+            { text: "А) Наблюдение", correct: true },
+            { text: "Б) Эксперимент", correct: true },
+            { text: "В) Измерение", correct: true },
+            { text: "Г) Идеализация", correct: false }
+        ]
+    },
+    {
+        text: "Кто автор концепции «открытого общества» и принципа фальсифицируемости?",
+        type: "radio",
+        options: [
+            { text: "А) К. Поппер", correct: true },
+            { text: "Б) К. Маркс", correct: false },
+            { text: "В) И. Кант", correct: false },
+            { text: "Г) Аристотель", correct: false }
+        ]
+    },
+    {
+        text: "Какие виды бессознательного выделяются в психоанализе и аналитической психологии?",
+        type: "checkbox",
+        options: [
+            { text: "А) Индивидуальное (по Фрейду)", correct: true },
+            { text: "Б) Коллективное (по Юнгу)", correct: true },
+            { text: "В) Интуитивное", correct: false },
+            { text: "Г) Социальное", correct: false }
+        ]
+    },
+    {
+        text: "Какая школа считала удовольствием и наслаждение единственным благом?",
+        type: "radio",
+        options: [
+            { text: "А) Стоики", correct: false },
+            { text: "Б) Киники", correct: false },
+            { text: "В) Киренаики", correct: true },
+            { text: "Г) Милетская школа", correct: false }
+        ]
+    },
+    {
+        text: "Какие свойства присущи причинно-следственной связи?",
+        type: "checkbox",
+        options: [
+            { text: "А) Объективность", correct: true },
+            { text: "Б) Всеобщность", correct: true },
+            { text: "В) Асимметрия", correct: true },
+            { text: "Г) Симметрия", correct: false }
+        ]
+    },
+    {
+        text: "Как определяется культура в философии (в противовес природе)?",
+        type: "radio",
+        options: [
+            { text: "А) Как инстинктивное поведение", correct: false },
+            { text: "Б) Как «вторая натура», созданная человеческим трудом", correct: true },
+            { text: "В) Как биологическая эволюция", correct: false },
+            { text: "Г) Как природная среда", correct: false }
+        ]
+    },
+    {
+        text: "Какие архетипы выделяет К. Юнг в структуре личности?",
+        type: "checkbox",
+        options: [
+            { text: "А) Самость", correct: true },
+            { text: "Б) Тень", correct: true },
+            { text: "В) Герой", correct: true },
+            { text: "Г) Эго", correct: false }
+        ]
+    },
+    {
+        text: "Какая фраза является основой философии Р. Декарта?",
+        type: "radio",
+        options: [
+            { text: "А) «Человек есть мера всех вещей»", correct: false },
+            { text: "Б) «Я мыслю, следовательно, существую»", correct: true },
+            { text: "В) «Всё течёт»", correct: false },
+            { text: "Г) «Быть — значит быть воспринимаемым»", correct: false }
+        ]
+    },
+    {
+        text: "Кто из философов внёс вклад в понимание цивилизаций?",
+        type: "checkbox",
+        options: [
+            { text: "А) Н. Данилевский", correct: true },
+            { text: "Б) О. Шпенглер", correct: true },
+            { text: "В) А. Тойнби", correct: true },
+            { text: "Г) И. Кант", correct: false }
+        ]
+    },
+    {
+        text: "Какой принцип был главным для киников?",
+        type: "radio",
+        options: [
+            { text: "А) Стремление к власти", correct: false },
+            { text: "Б) Автаркия (самодостаточность)", correct: true },
+            { text: "В) Поиск удовольствий", correct: false },
+            { text: "Г) Следование государственным законам", correct: false }
+        ]
+    },
+    {
+        text: "Какие признаки характерны для субъективного идеализма?",
+        type: "checkbox",
+        options: [
+            { text: "А) Реальность зависит от субъекта", correct: true },
+            { text: "Б) «Быть — значит быть воспринимаемым»", correct: true },
+            { text: "В) Материя не существует как самостоятельная субстанция", correct: true },
+            { text: "Г) Материя первична", correct: false }
+        ]
+    },
+    {
+        text: "Что в праве означает выражение «conditio sine qua non»?",
+        type: "radio",
+        options: [
+            { text: "А) Умысел", correct: false },
+            { text: "Б) Необходимое условие (теория причинности)", correct: true },
+            { text: "В) Юридическая норма", correct: false },
+            { text: "Г) Преступление", correct: false }
+        ]
+    },
+    {
+        text: "Какие мыслители заложили основы классической философии права?",
+        type: "checkbox",
+        options: [
+            { text: "А) Т. Гоббс", correct: true },
+            { text: "Б) Дж. Локк", correct: true },
+            { text: "В) И. Кант", correct: true },
+            { text: "Г) К. Маркс", correct: false }
+        ]
+    },
+    {
+        text: "Что такое агностицизм?",
+        type: "radio",
+        options: [
+            { text: "А) Учение о познаваемости мира", correct: false },
+            { text: "Б) Учение о принципиальной непознаваемости мира", correct: true },
+            { text: "В) Учение о Боге", correct: false },
+            { text: "Г) Учение о материи", correct: false }
+        ]
+    },
+    {
+        text: "Какие факторы, согласно Ф. Энгельсу, сыграли решающую роль в антропосоциогенезе?",
+        type: "checkbox",
+        options: [
+            { text: "А) Труд", correct: true },
+            { text: "Б) Речь", correct: true },
+            { text: "В) Коллективизм", correct: true },
+            { text: "Г) Биологическая мутация", correct: false }
+        ]
+    },
+    {
+        text: "Что, согласно Канту, является «вещью в себе» (ноуменом)?",
+        type: "radio",
+        options: [
+            { text: "А) Предмет, познанный наукой", correct: false },
+            { text: "Б) Мир, существующий независимо от нашего восприятия", correct: true },
+            { text: "В) Мир явлений", correct: false },
+            { text: "Г) Образ в сознании", correct: false }
+        ]
+    },
+    {
+        text: "Какие методы диалектики Сократа известны?",
+        type: "checkbox",
+        options: [
+            { text: "А) Ирония", correct: true },
+            { text: "Б) Майевтика", correct: true },
+            { text: "В) Диалог", correct: true },
+            { text: "Г) Индукция", correct: false }
+        ]
+    },
+    {
+        text: "Что считали первоосновой мира представители Милетской школы?",
+        type: "radio",
+        options: [
+            { text: "А) Стихии (вода, воздух, огонь)", correct: true },
+            { text: "Б) Идеи", correct: false },
+            { text: "В) Числа", correct: false },
+            { text: "Г) Бог", correct: false }
+        ]
+    },
+    {
+        text: "Какие виды свободы выделял И. Кант?",
+        type: "checkbox",
+        options: [
+            { text: "А) Отрицательная свобода", correct: true },
+            { text: "Б) Положительная свобода", correct: true },
+            { text: "В) Трансцендентальная свобода", correct: true },
+            { text: "Г) Свобода от законов", correct: false }
+        ]
+    },
+    {
+        text: "Какая концепция рассматривает Россию как «хартленд» (сердце земли)?",
+        type: "radio",
+        options: [
+            { text: "А) Концепция А. Тойнби", correct: false },
+            { text: "Б) Концепция Х. Маккиндера", correct: true },
+            { text: "В) Концепция С. Хантингтона", correct: false },
+            { text: "Г) Формационная теория", correct: false }
+        ]
+    },
+    {
+        text: "Какие стадии познания выделял О. Конт?",
+        type: "checkbox",
+        options: [
+            { text: "А) Мифологическая", correct: true },
+            { text: "Б) Философская", correct: true },
+            { text: "В) Научная", correct: true },
+            { text: "Г) Религиозная", correct: false }
+        ]
+    },
+    {
+        text: "Как определяется субкультура?",
+        type: "radio",
+        options: [
+            { text: "А) Как культура всего человечества", correct: false },
+            { text: "Б) Как культура социальной группы внутри доминирующей культуры", correct: true },
+            { text: "В) Как антикультура", correct: false },
+            { text: "Г) Как государственная идеология", correct: false }
+        ]
+    },
+    {
+        text: "Какие элементы входят в структуру теоретического знания?",
+        type: "checkbox",
+        options: [
+            { text: "А) Понятие", correct: true },
+            { text: "Б) Суждение", correct: true },
+            { text: "В) Теория", correct: true },
+            { text: "Г) Эмпирическое ощущение", correct: false }
+        ]
+    },
+    {
+        text: "Что является предметом философии согласно классическому (марксистскому) определению?",
+        type: "radio",
+        options: [
+            { text: "А) Изучение текстов Священного Писания", correct: false },
+            { text: "Б) Наиболее общие и фундаментальные законы природы, общества и мышления", correct: true },
+            { text: "В) Поиск смысла жизни отдельного индивида", correct: false },
+            { text: "Г) Законы развития исключительно человеческого общества", correct: false }
+        ]
+    },
+    {
+        text: "Какие из перечисленных разделов относятся к структуре философии?",
+        type: "checkbox",
+        options: [
+            { text: "А) Онтология", correct: true },
+            { text: "Б) Гносеология", correct: true },
+            { text: "В) Астрология", correct: false },
+            { text: "Г) Аксиология", correct: true }
+        ]
+    },
+    {
+        text: "Как звучит основной вопрос философии?",
+        type: "radio",
+        options: [
+            { text: "А) В чем смысл жизни?", correct: false },
+            { text: "Б) Что первично — материя или сознание?", correct: true },
+            { text: "В) Что есть истина?", correct: false },
+            { text: "Г) Познаваем ли мир?", correct: false }
+        ]
+    },
+    {
+        text: "Какие формы дуализма получили распространение в Новое время?",
+        type: "checkbox",
+        options: [
+            { text: "А) Деизм", correct: true },
+            { text: "Б) Объективный идеализм", correct: false },
+            { text: "В) Пантеизм", correct: true },
+            { text: "Г) Наивный материализм", correct: false }
+        ]
+    },
+    {
+        text: "Какой исторический тип мировоззрения является самым молодым?",
+        type: "radio",
+        options: [
+            { text: "А) Мифологическое", correct: false },
+            { text: "Б) Религиозное", correct: false },
+            { text: "В) Философское", correct: false },
+            { text: "Г) Научное", correct: true }
+        ]
+    },
+    {
+        text: "Каким образом мифологическое и религиозное мировоззрения влияют на правосознание?",
+        type: "checkbox",
+        options: [
+            { text: "А) Обеспечивают системный подход к правовому регулированию", correct: false },
+            { text: "Б) Порождают представление о правителе как помазаннике бога", correct: true },
+            { text: "В) Создают основу для теократического права", correct: true },
+            { text: "Г) Лежат в основе концепции разделения властей", correct: false }
+        ]
+    },
+    {
+        text: "Какая черта характерна для мифологического мышления, в отличие от философского?",
+        type: "radio",
+        options: [
+            { text: "А) Строится на логике и аргументации", correct: false },
+            { text: "Б) Требует доказательств", correct: false },
+            { text: "В) Принимает миф как аксиому, не требуя доказательств", correct: true },
+            { text: "Г) Создает категориальный аппарат", correct: false }
+        ]
+    },
+    {
+        text: "Какие философские методологии применяются в юриспруденции?",
+        type: "checkbox",
+        options: [
+            { text: "А) Диалектика", correct: true },
+            { text: "Б) Метафизика", correct: true },
+            { text: "В) Герменевтика", correct: true },
+            { text: "Г) Гностицизм", correct: false }
+        ]
+    },
+    {
+        text: "Что из перечисленного является одним из критериев понятийного мышления по Аристотелю?",
+        type: "radio",
+        options: [
+            { text: "А) Эмоционально-образное описание мира", correct: false },
+            { text: "Б) Соответствие законам формальной логики", correct: true },
+            { text: "В) Опора на веру в сверхъестественное", correct: false },
+            { text: "Г) Пассивность и опора на стереотипы", correct: false }
+        ]
+    },
+    {
+        text: "Какие условия способствовали возникновению философии в Древней Греции?",
+        type: "checkbox",
+        options: [
+            { text: "А) Наличие единого централизованного государства", correct: false },
+            { text: "Б) Существование демократии и состязательности мнений", correct: true },
+            { text: "В) Интеллектуальная свобода", correct: true },
+            { text: "Г) Господство деспотии", correct: false }
+        ]
+    },
+    {
+        text: "Кому из античных философов принадлежит утверждение «Бытие есть, небытия нет»?",
+        type: "radio",
+        options: [
+            { text: "А) Фалесу", correct: false },
+            { text: "Б) Гераклиту", correct: false },
+            { text: "В) Пармениду", correct: true },
+            { text: "Г) Демокриту", correct: false }
+        ]
+    },
+    {
+        text: "Из каких начал составляется бытие согласно онтологии Аристотеля?",
+        type: "checkbox",
+        options: [
+            { text: "А) Форма", correct: true },
+            { text: "Б) Материя", correct: true },
+            { text: "В) Идея", correct: false },
+            { text: "Г) Действие", correct: true }
+        ]
+    },
+    {
+        text: "Как Платон рассматривает соотношение души и тела?",
+        type: "radio",
+        options: [
+            { text: "А) Душа и тело неразделимы", correct: false },
+            { text: "Б) Тело — оковы души", correct: true },
+            { text: "В) Душа смертна, а тело вечно", correct: false },
+            { text: "Г) Душа распадается после смерти тела", correct: false }
+        ]
+    },
+    {
+        text: "Какие гносеологические концепции верно соотнесены с их авторами?",
+        type: "checkbox",
+        options: [
+            { text: "А) Платон: знание — припоминание", correct: true },
+            { text: "Б) Аристотель: знание приходит через опыт и индукцию", correct: true },
+            { text: "В) Сократ: знание врождено и не требует доказательств", correct: false },
+            { text: "Г) Пиррон: сомнение как метод познания", correct: true }
+        ]
+    },
+    {
+        text: "Как называется метод познания через искусные вопросы и диалог, применявшийся Сократом?",
+        type: "radio",
+        options: [
+            { text: "А) Дедукция", correct: false },
+            { text: "Б) Майевтика", correct: true },
+            { text: "В) Индукция", correct: false },
+            { text: "Г) Апория", correct: false }
+        ]
+    },
+    {
+        text: "Какие существуют основные законы диалектики?",
+        type: "checkbox",
+        options: [
+            { text: "А) Закон единства и борьбы противоположностей", correct: true },
+            { text: "Б) Закон сохранения энергии", correct: false },
+            { text: "В) Закон перехода количества в качество", correct: true },
+            { text: "Г) Закон отрицания отрицания", correct: true }
+        ]
+    },
+    {
+        text: "Как соотносятся категории «форма» и «содержание» с позиции диалектики?",
+        type: "radio",
+        options: [
+            { text: "А) Форма и содержание всегда изменяются исключительно одновременно", correct: false },
+            { text: "Б) Форма может оставаться неизменной, а содержание — меняться, и наоборот", correct: true },
+            { text: "В) Форма полностью и навсегда определяет содержание", correct: false },
+            { text: "Г) Содержание никак не влияет на форму", correct: false }
+        ]
+    },
+    {
+        text: "Какие категории диалектики используются в юриспруденции при разграничении умысла и неосторожности?",
+        type: "checkbox",
+        options: [
+            { text: "А) Необходимость", correct: true },
+            { text: "Б) Сущность", correct: false },
+            { text: "В) Случайность", correct: true },
+            { text: "Г) Действительность", correct: false }
+        ]
+    },
+    {
+        text: "Как определяли смысл жизни представители философской школы киников (например, Диоген)?",
+        type: "radio",
+        options: [
+            { text: "А) Жизнь ради телесного наслаждения и удовольствия", correct: false },
+            { text: "Б) Жизнь в соответствии с природой, отказ от условностей общества", correct: true },
+            { text: "В) Стойкое терпение ударов судьбы и покорность фатуму", correct: false },
+            { text: "Г) Познание мира вечных идей", correct: false }
+        ]
+    },
+    {
+        text: "В чем заключается суть концепции антропосоциогенеза Ф. Энгельса?",
+        type: "checkbox",
+        options: [
+            { text: "А) Человека сделал человеком труд", correct: true },
+            { text: "Б) Сначала у предков появился разум, а затем начался труд", correct: false },
+            { text: "В) Выживаемость первобытного человека зависела от жесткого коллективизма", correct: true },
+            { text: "Г) Человек возник исключительно по замыслу Бога", correct: false }
+        ]
+    },
+    {
+        text: "Какая гносеологическая позиция утверждает, что реальность зависит от воспринимающего субъекта («быть — значит быть воспринимаемым»)?",
+        type: "radio",
+        options: [
+            { text: "А) Сенсуализм", correct: false },
+            { text: "Б) Рационализм", correct: false },
+            { text: "В) Субъективный идеализм", correct: true },
+            { text: "Г) Объективный идеализм", correct: false }
+        ]
+    },
+    {
+        text: "Какие элементы входят в структуру психики согласно З. Фрейду?",
+        type: "checkbox",
+        options: [
+            { text: "А) Оно (Ид)", correct: true },
+            { text: "Б) Я (Эго)", correct: true },
+            { text: "В) Самость", correct: false },
+            { text: "Г) Сверх-Я (Супер-Эго)", correct: true }
+        ]
+    },
+    {
+        text: "Какое понятие ввел К. Юнг для обозначения универсальных изначальных образцов поведения, живущих в коллективном бессознательном?",
+        type: "radio",
+        options: [
+            { text: "А) Инстинкты", correct: false },
+            { text: "Б) Архетипы", correct: true },
+            { text: "В) Ноумены", correct: false },
+            { text: "Г) Феномены", correct: false }
+        ]
+    },
+    {
+        text: "Какие виды свободы выделял И. Кант?",
+        type: "checkbox",
+        options: [
+            { text: "А) Отрицательная свобода", correct: true },
+            { text: "Б) Положительная свобода", correct: true },
+            { text: "В) Абсолютная свобода", correct: false },
+            { text: "Г) Трансцендентальная свобода", correct: true }
+        ]
+    },
+    {
+        text: "Как называется раздел философии, учение о ценностях?",
+        type: "radio",
+        options: [
+            { text: "А) Гносеология", correct: false },
+            { text: "Б) Онтология", correct: false },
+            { text: "В) Аксиология", correct: true },
+            { text: "Г) Этика", correct: false }
+        ]
+    },
+    {
+        text: "Что характеризует «научное познание»?",
+        type: "checkbox",
+        options: [
+            { text: "А) Оперирование логикой и фактами", correct: true },
+            { text: "Б) Требование эксперимента и воспроизводимости", correct: true },
+            { text: "В) Объяснение мира через метафоры", correct: false },
+            { text: "Г) Стремление к объективности и универсальности", correct: true }
+        ]
+    },
+    {
+        text: "В чем состоит суть формационной концепции истории К. Маркса?",
+        type: "radio",
+        options: [
+            { text: "А) История движется циклично, зарождаясь и умирая", correct: false },
+            { text: "Б) История движется линейно и прогрессивно через смену пяти формаций", correct: true },
+            { text: "В) Каждая цивилизация уникальна и развивается абсолютно изолированно", correct: false },
+            { text: "Г) История определяется исключительно религиозным признаком", correct: false }
+        ]
+    },
+    {
+        text: "Какие проблемы относятся к числу глобальных проблем человечества?",
+        type: "checkbox",
+        options: [
+            { text: "А) Экологические проблемы", correct: true },
+            { text: "Б) Проблемы выживания (ядерная угроза)", correct: true },
+            { text: "В) Демографические проблемы", correct: true },
+            { text: "Г) Проблема поиска инопланетного разума", correct: false }
+        ]
+    },
+    {
+        text: "Что является предметом изучения философии права?",
+        type: "radio",
+        options: [
+            { text: "А) Процессуальные сроки в судопроизводстве", correct: false },
+            { text: "Б) Изучение правовой действительности в её наиболее общих и глубоких основаниях", correct: true },
+            { text: "В) Методика расследования конкретных видов преступлений", correct: false },
+            { text: "Г) Правила составления международных договоров", correct: false }
+        ]
+    },
+    {
+        text: "Какие методы толкования текстов включает юридическая герменевтика?",
+        type: "checkbox",
+        options: [
+            { text: "А) Грамматическое", correct: true },
+            { text: "Б) Систематическое", correct: true },
+            { text: "В) Мифологическое", correct: false },
+            { text: "Г) Телеологическое (целевое)", correct: true }
+        ]
+    },
+    {
+        text: "Что является основным критерием юридического позитивизма?",
+        type: "radio",
+        options: [
+            { text: "А) Соответствие закона естественным правам человека", correct: false },
+            { text: "Б) Признание правом того, что официально установлено государственной властью", correct: true },
+            { text: "В) Этическая оценка закона как «доброго» или «злого»", correct: false },
+            { text: "Г) Соответствие закона религиозным догматам", correct: false }
+        ]
+    },
+    {
+        text: "В чем заключается суть «распределительной справедливости» по Аристотелю?",
+        type: "radio",
+        options: [
+            { text: "А) Равное отношение ко всем без исключения", correct: false },
+            { text: "Б) Предоставление благ каждому в соответствии с его заслугами", correct: true },
+            { text: "В) Уравнивание всех граждан в имущественном отношении", correct: false },
+            { text: "Г) Устранение всякого неравенства", correct: false }
+        ]
+    },
+    {
+        text: "Какие черты характеризуют правовое государство?",
+        type: "checkbox",
+        options: [
+            { text: "А) Верховенство права над властью", correct: true },
+            { text: "Б) Разделение властей", correct: true },
+            { text: "В) Отсутствие частной собственности", correct: false },
+            { text: "Г) Равенство всех перед законом", correct: true }
+        ]
+    },
+    {
+        text: "Какова основная функция гражданского общества в философии права?",
+        type: "radio",
+        options: [
+            { text: "А) Полное подчинение государственной воле", correct: false },
+            { text: "Б) Защита частных интересов и контроль за деятельностью государства", correct: true },
+            { text: "В) Установление абсолютной монархии", correct: false },
+            { text: "Г) Отмена всех правовых норм", correct: false }
+        ]
+    },
+    {
+        text: "Какие типы легитимного господства выделяет М. Вебер?",
+        type: "checkbox",
+        options: [
+            { text: "А) Традиционный", correct: true },
+            { text: "Б) Харизматический", correct: true },
+            { text: "В) Легально-рациональный", correct: true },
+            { text: "Г) Военно-диктаторский", correct: false }
+        ]
+    },
+    {
+        text: "Как Огюст Конт определяет стадии развития человеческого разума?",
+        type: "checkbox",
+        options: [
+            { text: "А) Теологическая", correct: true },
+            { text: "Б) Метафизическая", correct: true },
+            { text: "В) Позитивная (научная)", correct: true },
+            { text: "Г) Мистическая", correct: false }
+        ]
+    },
+    {
+        text: "Что Ницше понимал под «смертью Бога»?",
+        type: "radio",
+        options: [
+            { text: "А) Физическую гибель божества", correct: false },
+            { text: "Б) Устаревание традиционных ценностей и христианской морали", correct: true },
+            { text: "В) Запрет на религию в государстве", correct: false },
+            { text: "Г) Победу научного атеизма", correct: false }
+        ]
+    },
+    {
+        text: "Какой метод в феноменологии Эдмунда Гуссерля предполагает воздержание от суждений о внешнем мире?",
+        type: "radio",
+        options: [
+            { text: "А) Индукция", correct: false },
+            { text: "Б) Эпохе", correct: true },
+            { text: "В) Силлогизм", correct: false },
+            { text: "Г) Дедукция", correct: false }
+        ]
+    },
+    {
+        text: "Что означает тезис Сартра «существование предшествует сущности»?",
+        type: "radio",
+        options: [
+            { text: "А) Человек сначала создается как идея", correct: false },
+            { text: "Б) Человек сначала появляется в мире, а затем сам создает себя через выбор", correct: true },
+            { text: "В) Судьба человека предопределена биологией", correct: false },
+            { text: "Г) Сначала формируется душа, затем тело", correct: false }
+        ]
+    },
+    {
+        text: "Что такое «герменевтический круг» в философии Гадамера?",
+        type: "radio",
+        options: [
+            { text: "А) Процесс смены научных парадигм", correct: false },
+            { text: "Б) Понимание целого через части и частей через целое", correct: true },
+            { text: "В) Метод математического доказательства", correct: false },
+            { text: "Г) Бесконечный спор без прихода к истине", correct: false }
+        ]
+    },
+    {
+        text: "Какой критерий научности теории предложил Карл Поппер?",
+        type: "radio",
+        options: [
+            { text: "А) Подтверждаемость опытом (верификация)", correct: false },
+            { text: "Б) Фальсифицируемость (принципиальная опровержимость)", correct: true },
+            { text: "В) Соответствие церковным догматам", correct: false },
+            { text: "Г) Древность теории", correct: false }
+        ]
+    },
+    {
+        text: "Как Томас Кун описывает развитие науки?",
+        type: "radio",
+        options: [
+            { text: "А) Как линейный прогресс без перерывов", correct: false },
+            { text: "Б) Как смену парадигм через научные революции", correct: true },
+            { text: "В) Как накопление фактов без изменения теорий", correct: false },
+            { text: "Г) Как возврат к античным знаниям", correct: false }
+        ]
+    },
+    {
+        text: "Какую роль играет язык в философии Людвига Витгенштейна?",
+        type: "radio",
+        options: [
+            { text: "А) Язык — это лишь инструмент описания вещей", correct: false },
+            { text: "Б) Границы моего языка означают границы моего мира", correct: true },
+            { text: "В) Язык не имеет значения для философии", correct: false },
+            { text: "Г) Язык — это чистое творчество", correct: false }
+        ]
+    },
+    {
+        text: "Что утверждают теории элит (Парето, Моска)?",
+        type: "radio",
+        options: [
+            { text: "А) Власть всегда принадлежит большинству народа", correct: false },
+            { text: "Б) Обществом всегда правит организованное меньшинство — элита", correct: true },
+            { text: "В) Власть распределяется поровну", correct: false },
+            { text: "Г) Государство должно управляться жребием", correct: false }
+        ]
+    },
+    {
+        text: "Какие признаки характеризуют тоталитаризм согласно Ханне Арендт?",
+        type: "checkbox",
+        options: [
+            { text: "А) Полный контроль над частной и публичной жизнью", correct: true },
+            { text: "Б) Атомизация общества", correct: true },
+            { text: "В) Развитое гражданское общество", correct: false },
+            { text: "Г) Использование пропаганды и террора", correct: true }
+        ]
+    },
+    {
+        text: "В чем различие антропоцентризма и биоцентризма в экоэтике?",
+        type: "radio",
+        options: [
+            { text: "А) Антропоцентризм ставит человека в центр, биоцентризм — всю жизнь", correct: true },
+            { text: "Б) Биоцентризм ставит человека в центр, антропоцентризм — природу", correct: false },
+            { text: "В) Это синонимы", correct: false },
+            { text: "Г) Оба учения отрицают экологические проблемы", correct: false }
+        ]
+    },
+    {
+        text: "Как понимается историческое время в философии Просвещения и марксизме?",
+        type: "radio",
+        options: [
+            { text: "А) Как бесконечный цикл", correct: false },
+            { text: "Б) Как линейный процесс прогресса", correct: true },
+            { text: "В) Как хаотичное движение", correct: false },
+            { text: "Г) Как движение вспять", correct: false }
+        ]
+    },
+    {
+        text: "Какая черта характерна для постмодернизма?",
+        type: "checkbox",
+        options: [
+            { text: "А) Отказ от «великих нарративов» (метанарративов)", correct: true },
+            { text: "Б) Использование иронии и деконструкции", correct: true },
+            { text: "В) Вера в единую объективную истину", correct: false },
+            { text: "Г) Поклонение научному прогрессу", correct: false }
+        ]
+    },
+    {
+        text: "Какой главный конфликт порождает глобализация в сфере идентичности?",
+        type: "radio",
+        options: [
+            { text: "А) Между богатством и бедностью", correct: false },
+            { text: "Б) Между унификацией (вестернизацией) и поиском уникальности (фундаментализмом)", correct: true },
+            { text: "В) Между наукой и религией", correct: false },
+            { text: "Г) Между городом и деревней", correct: false }
+        ]
+    },
+    {
+        text: "В чем суть аргумента «Китайской комнаты» Дж. Сёрля против сильного ИИ?",
+        type: "radio",
+        options: [
+            { text: "А) Машина может мыслить как человек", correct: false },
+            { text: "Б) Имитация понимания (обработка данных) не является пониманием", correct: true },
+            { text: "В) Машина обладает сознанием", correct: false },
+            { text: "Г) Машина лучше человека в логике", correct: false }
+        ]
+    },
+    {
+        text: "На чем основан идеал демократии в коммуникативной философии Ю. Хабермаса?",
+        type: "radio",
+        options: [
+            { text: "А) На принуждении большинства", correct: false },
+            { text: "Б) На свободном диалоге, свободном от принуждения", correct: true },
+            { text: "В) На харизме лидера", correct: false },
+            { text: "Г) На господстве элит", correct: false }
+        ]
+    },
+    {
+        text: "Как Фома Аквинский определял соотношение веры и разума?",
+        type: "radio",
+        options: [
+            { text: "А) Вера и разум противоречат друг другу", correct: false },
+            { text: "Б) Разум — «служанка богословия», но может доказать существование Бога", correct: true },
+            { text: "В) Разум выше веры", correct: false },
+            { text: "Г) Философия полностью отрицает веру", correct: false }
+        ]
+    },
+    {
+        text: "Как Гегель определяет цель истории?",
+        type: "radio",
+        options: [
+            { text: "А) Накопление материальных благ", correct: false },
+            { text: "Б) Прогресс в сознании свободы", correct: true },
+            { text: "В) Построение бесклассового общества", correct: false },
+            { text: "Г) Развитие технологий", correct: false }
+        ]
+    },
+    {
+        text: "Как Камю в экзистенциализме предлагает реагировать на «абсурд» жизни?",
+        type: "radio",
+        options: [
+            { text: "А) Уйти от мира в религию", correct: false },
+            { text: "Б) Бунтовать, созидать и продолжать жить", correct: true },
+            { text: "В) Совершить самоубийство", correct: false },
+            { text: "Г) Прекратить всякую деятельность", correct: false }
+        ]
+    },
+    {
+        text: "Чем отличается стратификация по Марксу от стратификации по Веберу?",
+        type: "radio",
+        options: [
+            { text: "А) Маркс — экономика (классы), Вебер — многомерная модель (статус, власть, класс)", correct: true },
+            { text: "Б) Маркс — только статус, Вебер — только экономика", correct: false },
+            { text: "В) Они идентичны", correct: false },
+            { text: "Г) Маркс отрицает классы", correct: false }
+        ]
+    },
+    {
+        text: "Почему Арнольд Гелен называл человека «недостаточным существом»?",
+        type: "radio",
+        options: [
+            { text: "А) Из-за нехватки интеллекта", correct: false },
+            { text: "Б) Из-за отсутствия узкой специализации инстинктов, что требует создания культуры", correct: true },
+            { text: "В) Из-за физической слабости", correct: false },
+            { text: "Г) Из-за неспособности к труду", correct: false }
+        ]
+    },
+    {
+        text: "Какие типы справедливости выделял Аристотель?",
+        type: "checkbox",
+        options: [
+            { text: "А) Распределительная", correct: true },
+            { text: "Б) Уравнительная", correct: true },
+            { text: "В) Карательная", correct: false },
+            { text: "Г) Теократическая", correct: false }
+        ]
+    },
+    {
+        text: "В чем различие Гоббса и Локка в вопросе общественного договора?",
+        type: "radio",
+        options: [
+            { text: "А) Гоббс — за абсолютизм, Локк — за либерализм и права", correct: true },
+            { text: "Б) Гоббс — за либерализм, Локк — за абсолютизм", correct: false },
+            { text: "В) Оба за анархию", correct: false },
+            { text: "Г) Оба за демократию", correct: false }
+        ]
+    },
+    {
+        text: "Что является источником развития в гегелевской диалектике?",
+        type: "radio",
+        options: [
+            { text: "А) Внешний толчок", correct: false },
+            { text: "Б) Внутреннее противоречие (борьба противоположностей)", correct: true },
+            { text: "В) Случайность", correct: false },
+            { text: "Г) Божественное вмешательство", correct: false }
+        ]
+    },
+    {
+        text: "К чему стремится «экологическая этика» в биоцентрическом варианте?",
+        type: "radio",
+        options: [
+            { text: "А) К полному подчинению природы человеку", correct: false },
+            { text: "Б) К признанию внутренней ценности всех живых существ", correct: true },
+            { text: "В) К созданию технократического общества", correct: false },
+            { text: "Г) К игнорированию прав животных", correct: false }
+        ]
+    },
+    {
+        text: "Что является «основным вопросом философии»?",
+        type: "radio",
+        options: [
+            { text: "А) Вопрос о происхождении человека", correct: false },
+            { text: "Б) Вопрос о соотношении материи и сознания (что первично)", correct: true },
+            { text: "В) Вопрос о смысле жизни", correct: false },
+            { text: "Г) Вопрос о границах познаваемости мира", correct: false }
+        ]
+    },
+    {
+        text: "Как называется раздел философии, изучающий ценности?",
+        type: "radio",
+        options: [
+            { text: "А) Онтология", correct: false },
+            { text: "Б) Гносеология", correct: false },
+            { text: "В) Аксиология", correct: true },
+            { text: "Г) Эстетика", correct: false }
+        ]
+    },
+    {
+        text: "Что в философии называют «эклектикой»?",
+        type: "radio",
+        options: [
+            { text: "А) Учение о первоначалах бытия", correct: false },
+            { text: "Б) Смешение различных философских позиций", correct: true },
+            { text: "В) Научный метод познания", correct: false },
+            { text: "Г) Радикальный скептицизм", correct: false }
+        ]
+    },
+    {
+        text: "Какая из перечисленных форм мировоззрения является наиболее древней?",
+        type: "radio",
+        options: [
+            { text: "А) Религиозное", correct: false },
+            { text: "Б) Мифологическое", correct: true },
+            { text: "В) Философское", correct: false },
+            { text: "Г) Научное", correct: false }
+        ]
+    },
+    {
+        text: "В чем заключается ключевое отличие философского мышления от мифологического?",
+        type: "radio",
+        options: [
+            { text: "А) Философия иррациональна", correct: false },
+            { text: "Б) Философия не требует доказательств", correct: false },
+            { text: "В) Философия рациональна, опирается на разум и доказательства", correct: true },
+            { text: "Г) Философия базируется на вере", correct: false }
+        ]
+    },
+    {
+        text: "Что, согласно диалектике, является источником движения и развития системы?",
+        type: "radio",
+        options: [
+            { text: "А) Внешний толчок", correct: false },
+            { text: "Б) Внутреннее противоречие", correct: true },
+            { text: "В) Божественное вмешательство", correct: false },
+            { text: "Г) Случайное событие", correct: false }
+        ]
+    },
+    {
+        text: "Что означает закон «перехода количества в качество»?",
+        type: "radio",
+        options: [
+            { text: "А) Постепенное изменение без скачков", correct: false },
+            { text: "Б) Накопление количественных изменений приводит к качественному скачку", correct: true },
+            { text: "В) Вечное повторение одного и того же", correct: false },
+            { text: "Г) Разрушение системы", correct: false }
+        ]
+    },
+    {
+        text: "Как называется закон диалектики, описывающий развитие по «спирали»?",
+        type: "radio",
+        options: [
+            { text: "А) Единство противоположностей", correct: false },
+            { text: "Б) Отрицание отрицания", correct: true },
+            { text: "В) Переход количества в качество", correct: false },
+            { text: "Г) Закон тождества", correct: false }
+        ]
+    },
+    {
+        text: "Что в диалектике понимается под «формой»?",
+        type: "radio",
+        options: [
+            { text: "А) Внутреннее содержание явления", correct: false },
+            { text: "Б) Внешняя оболочка и способ выражения содержания", correct: true },
+            { text: "В) Сущность предмета", correct: false },
+            { text: "Г) Причина возникновения", correct: false }
+        ]
+    },
+    {
+        text: "Как диалектика определяет «случайность»?",
+        type: "radio",
+        options: [
+            { text: "А) Как отсутствие всякой причины", correct: false },
+            { text: "Б) Как непознанную необходимость", correct: true },
+            { text: "В) Как божественное провидение", correct: false },
+            { text: "Г) Как основную форму бытия", correct: false }
+        ]
+    },
+    {
+        text: "Что такое «майевтика» Сократа?",
+        type: "radio",
+        options: [
+            { text: "А) Метод убеждения аудитории", correct: false },
+            { text: "Б) Метод поиска истины через диалог и вопросы", correct: true },
+            { text: "В) Способ накопления богатства", correct: false },
+            { text: "Г) Техника запоминания текстов", correct: false }
+        ]
+    },
+    {
+        text: "В чем различие между «сущностью» и «явлением»?",
+        type: "radio",
+        options: [
+            { text: "А) Это одно и то же", correct: false },
+            { text: "Б) Сущность — это внешнее проявление, явление — основа", correct: false },
+            { text: "В) Сущность — глубинная основа, явление — внешнее проявление", correct: true },
+            { text: "Г) Явление всегда совпадает с сущностью", correct: false }
+        ]
+    },
+    {
+        text: "Кому принадлежит фраза «Всё течёт, всё изменяется»?",
+        type: "radio",
+        options: [
+            { text: "А) Фалесу", correct: false },
+            { text: "Б) Гераклиту", correct: true },
+            { text: "В) Платону", correct: false },
+            { text: "Г) Аристотелю", correct: false }
+        ]
+    },
+    {
+        text: "Какую формулу бытия выдвинула Элейская школа?",
+        type: "radio",
+        options: [
+            { text: "А) «Мир есть вода»", correct: false },
+            { text: "Б) «Бытие есть, небытия нет»", correct: true },
+            { text: "В) «Всё есть число»", correct: false },
+            { text: "Г) «Мир есть борьба»", correct: false }
+        ]
+    },
+    {
+        text: "Как Платон определял материальный мир?",
+        type: "radio",
+        options: [
+            { text: "А) Как высшую реальность", correct: false },
+            { text: "Б) Как несовершенную копию мира идей", correct: true },
+            { text: "В) Как независимую субстанцию", correct: false },
+            { text: "Г) Как совокупность атомов", correct: false }
+        ]
+    },
+    {
+        text: "Какие четыре начала бытия выделял Аристотель?",
+        type: "radio",
+        options: [
+            { text: "А) Огонь, вода, земля, воздух", correct: false },
+            { text: "Б) Форма, материя, действие, цель", correct: true },
+            { text: "В) Атомы, пустота, движение, случайность", correct: false },
+            { text: "Г) Бог, человек, природа, разум", correct: false }
+        ]
+    },
+    {
+        text: "Какую цель жизни проповедовали киники (например, Диоген)?",
+        type: "radio",
+        options: [
+            { text: "А) Наслаждение удовольствиями", correct: false },
+            { text: "Б) Достижение самодостаточности (автаркии) и жизнь по природе", correct: true },
+            { text: "В) Политическую власть", correct: false },
+            { text: "Г) Стяжательство богатства", correct: false }
+        ]
+    },
+    {
+        text: "Что означает тезис Декарта «Cogito ergo sum»?",
+        type: "radio",
+        options: [
+            { text: "А) «Я чувствую, следовательно, существую»", correct: false },
+            { text: "Б) «Я мыслю, следовательно, существую»", correct: true },
+            { text: "В) «Я верю, следовательно, существую»", correct: false },
+            { text: "Г) «Я творю, следовательно, существую»", correct: false }
+        ]
+    },
+    {
+        text: "Что такое «tabula rasa» в философии Дж. Локка?",
+        type: "radio",
+        options: [
+            { text: "А) «Врожденная идея»", correct: false },
+            { text: "Б) «Чистая доска» (состояние разума при рождении)", correct: true },
+            { text: "В) «Божественный разум»", correct: false },
+            { text: "Г) «Материальная субстанция»", correct: false }
+        ]
+    },
+    {
+        text: "Что Кант называл «вещью в себе»?",
+        type: "radio",
+        options: [
+            { text: "А) Объект, познанный наукой", correct: false },
+            { text: "Б) Мир, каким он является сам по себе, независимо от нашего восприятия", correct: true },
+            { text: "В) Ощущение субъекта", correct: false },
+            { text: "Г) Божественное провидение", correct: false }
+        ]
+    },
+    {
+        text: "Что, по Канту, является априорными формами чувственности?",
+        type: "radio",
+        options: [
+            { text: "А) Логика и математика", correct: false },
+            { text: "Б) Пространство и время", correct: true },
+            { text: "В) Бог и душа", correct: false },
+            { text: "Г) Материя и движение", correct: false }
+        ]
+    },
+    {
+        text: "В чем заключается суть пантеизма Б. Спинозы?",
+        type: "radio",
+        options: [
+            { text: "А) Бог стоит над миром и управляет им", correct: false },
+            { text: "Б) Бог отождествляется с природой («Бог есть всё»)", correct: true },
+            { text: "В) Мир создан Богом из ничего", correct: false },
+            { text: "Г) Мир существует без Бога", correct: false }
+        ]
+    },
+    {
+        text: "Что такое «ноумен» в философии Канта?",
+        type: "radio",
+        options: [
+            { text: "А) Мир явлений", correct: false },
+            { text: "Б) Познаваемая реальность", correct: false },
+            { text: "В) Принципиально непознаваемая сущность вещей", correct: true },
+            { text: "Г) Результат эксперимента", correct: false }
+        ]
+    },
+    {
+        text: "Кто сформулировал идею о том, что «труд создал человека»?",
+        type: "radio",
+        options: [
+            { text: "А) К. Маркс", correct: false },
+            { text: "Б) Ф. Энгельс", correct: true },
+            { text: "В) Ч. Дарвин", correct: false },
+            { text: "Г) З. Фрейд", correct: false }
+        ]
+    },
+    {
+        text: "Как Фрейд называл структуру психики, отвечающую за базовые инстинкты?",
+        type: "radio",
+        options: [
+            { text: "А) Сверх-Я", correct: false },
+            { text: "Б) Эго", correct: false },
+            { text: "В) Оно (Ид)", correct: true },
+            { text: "Г) Архетип", correct: false }
+        ]
+    },
+    {
+        text: "Что Юнг понимал под «архетипами»?",
+        type: "radio",
+        options: [
+            { text: "А) Личные воспоминания", correct: false },
+            { text: "Б) Универсальные образцы поведения в коллективном бессознательном", correct: true },
+            { text: "В) Социальные роли", correct: false },
+            { text: "Г) Биологические инстинкты", correct: false }
+        ]
+    },
+    {
+        text: "Какой архетип в психологии Юнга олицетворяет «тёмную сторону» личности?",
+        type: "radio",
+        options: [
+            { text: "А) Самость", correct: false },
+            { text: "Б) Тень", correct: true },
+            { text: "В) Герой", correct: false },
+            { text: "Г) Мудрец", correct: false }
+        ]
+    },
+    {
+        text: "Что в марксизме является «базисом» общества?",
+        type: "radio",
+        options: [
+            { text: "А) Право и мораль", correct: false },
+            { text: "Б) Экономические отношения (способ производства)", correct: true },
+            { text: "В) Религия", correct: false },
+            { text: "Г) Искусство", correct: false }
+        ]
+    },
+    {
+        text: "Как Н. Данилевский определял единицу исторического процесса?",
+        type: "radio",
+        options: [
+            { text: "А) Общечеловеческая цивилизация", correct: false },
+            { text: "Б) Культурно-исторический тип", correct: true },
+            { text: "В) Классовая формация", correct: false },
+            { text: "Г) Государство", correct: false }
+        ]
+    },
+    {
+        text: "В чем суть концепции Арнольда Тойнби?",
+        type: "radio",
+        options: [
+            { text: "А) История — это классовая борьба", correct: false },
+            { text: "Б) История — это ряд вызовов, на которые цивилизации дают ответы", correct: true },
+            { text: "В) История — это линейный прогресс", correct: false },
+            { text: "Г) История — это случайность", correct: false }
+        ]
+    },
+    {
+        text: "Что относится к «глобальным проблемам человечества»?",
+        type: "radio",
+        options: [
+            { text: "А) Борьба с коррупцией в одном государстве", correct: false },
+            { text: "Б) Угроза ядерной войны и экологический кризис", correct: true },
+            { text: "В) Реформа местного самоуправления", correct: false },
+            { text: "Г) Развитие национальной культуры", correct: false }
+        ]
+    },
+    {
+        text: "Как определяется «культура» в философии?",
+        type: "radio",
+        options: [
+            { text: "А) Как природная среда", correct: false },
+            { text: "Б) Как совокупность всего созданного человеком", correct: true },
+            { text: "В) Как биологическая эволюция", correct: false },
+            { text: "Г) Как только искусство", correct: false }
+        ]
+    },
+    {
+        text: "Каков основной предмет философии права?",
+        type: "radio",
+        options: [
+            { text: "А) Изучение конкретных законов", correct: false },
+            { text: "Б) Изучение оснований, природы и смысла права", correct: true },
+            { text: "В) Судебная практика", correct: false },
+            { text: "Г) Криминология", correct: false }
+        ]
+    },
+    {
+        text: "Что требует категорический императив Канта?",
+        type: "radio",
+        options: [
+            { text: "А) Поступать согласно личной выгоде", correct: false },
+            { text: "Б) Поступать так, чтобы максима твоего поступка могла стать всеобщим законом", correct: true },
+            { text: "В) Подчиняться любому приказу", correct: false },
+            { text: "Г) Искать удовольствия", correct: false }
+        ]
+    },
+    {
+        text: "Какое определение справедливости предложил Аристотель?",
+        type: "radio",
+        options: [
+            { text: "А) Справедливость — это равенство всех", correct: false },
+            { text: "Б) Справедливость — это воздаяние каждому по его заслугам", correct: true },
+            { text: "В) Справедливость — это воля правителя", correct: false },
+            { text: "Г) Справедливость — это отсутствие законов", correct: false }
+        ]
+    },
+    {
+        text: "Какова позиция юридического позитивизма относительно права?",
+        type: "radio",
+        options: [
+            { text: "А) Право — это естественный закон", correct: false },
+            { text: "Б) Право — это то, что официально установлено государственной властью", correct: true },
+            { text: "В) Право — это мораль", correct: false },
+            { text: "Г) Право — это божественный дар", correct: false }
+        ]
+    },
+    {
+        text: "В чем заключается проблема «буквы и духа закона» в герменевтике?",
+        type: "radio",
+        options: [
+            { text: "А) В конфликте между формой и содержанием нормы", correct: true },
+            { text: "Б) В способе написания текста", correct: false },
+            { text: "В) В количестве сторон в процессе", correct: false },
+            { text: "Г) В языке закона", correct: false }
+        ]
+    },
+    {
+        text: "Что такое «герменевтический круг»?",
+        type: "radio",
+        options: [
+            { text: "А) Метод логического доказательства", correct: false },
+            { text: "Б) Необходимость понимания целого через части и частей через целое", correct: true },
+            { text: "В) Замкнутость правовой системы", correct: false },
+            { text: "Г) Способ уклонения от правосудия", correct: false }
+        ]
+    },
+    {
+        text: "Чем естественное право отличается от позитивного?",
+        type: "radio",
+        options: [
+            { text: "А) Оно всегда написано", correct: false },
+            { text: "Б) Оно вытекает из природы разума, а не из воли государства", correct: true },
+            { text: "В) Оно создано судом", correct: false },
+            { text: "Г) Оно не существует", correct: false }
+        ]
+    },
+    {
+        text: "Как правосознание влияет на право?",
+        type: "radio",
+        options: [
+            { text: "А) Никак не влияет", correct: false },
+            { text: "Б) Формирует основу правового регулирования и восприятия права", correct: true },
+            { text: "В) Заменяет право", correct: false },
+            { text: "Г) Устраняет все законы", correct: false }
+        ]
+    }
+];
+
+// ─── СЛУЧАЙНАЯ ВЫБОРКА (Fisher-Yates) ─────────────────
+function pickQuestions() {
+    const pool = ALL_QUESTIONS.slice();                    // копия пула
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];          // перемешать
+    }
+    return pool.slice(0, Math.min(QUIZ_SIZE, pool.length)); // взять первые N
+}
+
+// ─── СОСТОЯНИЕ СЕССИИ ─────────────────────────────────
+let questions = pickQuestions();   // вопросы текущей сессии
+let answers   = questions.map(() => []); // ответы пользователя
+let current   = 0;
+
+/* ─── START (title screen → quiz) ─── */
+function startQuiz() {
+    document.getElementById('title-screen').style.display  = 'none';
+    document.getElementById('main-header').style.display   = '';
+    document.getElementById('progress-wrap').style.display = '';
+    document.getElementById('question-card').style.display = '';
+    renderQuestion(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ─── RENDER ─── */
+function renderQuestion(index) {
+    const q = questions[index];
+    const card = document.getElementById('question-card');
+
+    // force re-animation
+    card.style.animation = 'none';
+    card.offsetHeight; // reflow
+    card.style.animation = '';
+
+    // badge
+    document.getElementById('q-badge').textContent =
+        q.type === 'radio' ? 'Один правильный ответ' : 'Несколько правильных ответов';
+
+    document.getElementById('q-text').textContent = q.text;
+
+    const cont = document.getElementById('options-container');
+    cont.innerHTML = '';
+
+    q.options.forEach((opt, oIndex) => {
+        const label = document.createElement('label');
+        label.className = 'option-label';
+
+        const input = document.createElement('input');
+        input.type = q.type;
+        input.name = 'q' + index;
+        input.value = oIndex;
+        input.checked = answers[index].includes(oIndex);
+
+        input.addEventListener('change', () => {
+            if (q.type === 'radio') {
+                answers[index] = [oIndex];
+            } else {
+                if (input.checked) {
+                    if (!answers[index].includes(oIndex)) answers[index].push(oIndex);
+                } else {
+                    answers[index] = answers[index].filter(v => v !== oIndex);
+                }
+            }
+        });
+
+        const span = document.createElement('span');
+        span.textContent = opt.text;
+
+        label.appendChild(input);
+        label.appendChild(span);
+        cont.appendChild(label);
+    });
+
+    updateProgress(index);
+    updateNav(index);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress(index) {
+    const total = questions.length;
+    const pct = Math.round((index / total) * 100);
+    document.getElementById('progress-text').textContent =
+        'Вопрос ' + (index + 1) + ' из ' + total;
+    document.getElementById('progress-pct').textContent = pct + '%';
+    document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function updateNav(index) {
+    const isLast = index === questions.length - 1;
+    document.getElementById('btn-back').disabled = index === 0;
+    document.getElementById('btn-next').style.display  = isLast ? 'none'  : '';
+    document.getElementById('btn-submit').style.display = isLast ? '' : 'none';
+}
+
+function goNext() {
+    if (current < questions.length - 1) { current++; renderQuestion(current); }
+}
+function goBack() {
+    if (current > 0) { current--; renderQuestion(current); }
+}
+
+/* ─── SUBMIT ─── */
+function submitQuiz() {
+    let score = 0;
+    questions.forEach((q, i) => {
+        const correctIndices = q.options.map((o, j) => o.correct ? j : -1).filter(j => j >= 0);
+        const userIndices    = answers[i].slice().sort();
+        const isCorrect      = JSON.stringify(correctIndices.sort()) === JSON.stringify(userIndices);
+        if (isCorrect) score++;
+    });
+
+    document.getElementById('question-card').style.display  = 'none';
+    document.getElementById('progress-wrap').style.display  = 'none';
+    document.getElementById('result-card').classList.add('show');
+
+    const total = questions.length;
+    const pct   = Math.round((score / total) * 100);
+    document.getElementById('big-score').textContent = score + ' / ' + total;
+    document.getElementById('result-icon').textContent =
+        pct === 100 ? '🏆' : pct >= 75 ? '🎉' : pct >= 50 ? '📚' : '💡';
+    document.getElementById('result-sub').textContent =
+        pct === 100 ? 'Отличный результат! Все ответы верны.' :
+        pct >= 75   ? 'Хороший результат! Почти всё правильно.' :
+        pct >= 50   ? 'Неплохо, но есть над чем поработать.' :
+                      'Стоит повторить материал. Удачи в следующий раз!';
+
+    buildAnswersTable();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ─── ANSWERS TABLE ─── */
+function buildAnswersTable() {
+    const tbody = document.getElementById('answers-tbody');
+    tbody.innerHTML = '';
+
+    questions.forEach((q, i) => {
+        const correctIndices = q.options.map((o, j) => o.correct ? j : -1).filter(j => j >= 0);
+        const userIndices    = answers[i].slice().sort();
+        const isCorrect      = JSON.stringify(correctIndices.sort()) === JSON.stringify(userIndices);
+
+        // Helper: get display text for a set of option indices
+        function optTexts(indices) {
+            if (!indices.length) return '<em style="color:var(--muted)">—</em>';
+            return indices.map(idx => {
+                // Extract just the letter prefix (А, Б, В, Г...) and the rest of the text
+                const t = q.options[idx].text;
+                return '<span>' + t + '</span>';
+            }).join('<br>');
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = isCorrect ? 'row-ok' : 'row-bad';
+
+        // Truncate question text for the table
+        const shortQ = q.text.length > 70 ? q.text.slice(0, 68) + '…' : q.text;
+
+        tr.innerHTML =
+            '<td class="ans-num">' + (i + 1) + '</td>' +
+            '<td class="ans-q">' + shortQ + '</td>' +
+            '<td class="ans-a">' + optTexts(userIndices) + '</td>' +
+            '<td class="ans-a">' + optTexts(correctIndices) + '</td>' +
+            '<td class="ans-v ' + (isCorrect ? 'ok' : 'bad') + '">' + (isCorrect ? '✓' : '✗') + '</td>';
+
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('answers-wrap').classList.add('show');
+}
+
+/* ─── REVIEW ─── */
+function showReview() {
+    const rc = document.getElementById('review-container');
+    rc.innerHTML = '';
+    rc.classList.add('show');
+
+    questions.forEach((q, i) => {
+        const correctIndices = q.options.map((o, j) => o.correct ? j : -1).filter(j => j >= 0);
+        const userIndices    = answers[i];
+
+        const card = document.createElement('div');
+        card.className = 'review-card';
+
+        const badge = document.createElement('div');
+        badge.className = 'q-type-badge';
+        const isCorrect = JSON.stringify(correctIndices.sort()) === JSON.stringify(userIndices.slice().sort());
+        badge.textContent = isCorrect ? '✓ Верно' : '✗ Неверно';
+        badge.style.color = isCorrect ? '#27ae60' : '#e74c3c';
+        badge.style.background = isCorrect ? '#d5f5e3' : '#fadbd8';
+
+        const qText = document.createElement('div');
+        qText.className = 'q-text';
+        qText.style.marginBottom = '16px';
+        qText.textContent = q.text;
+
+        const opts = document.createElement('div');
+        opts.className = 'options';
+
+        q.options.forEach((opt, oIndex) => {
+            const label = document.createElement('label');
+            label.className = 'option-label';
+
+            const input = document.createElement('input');
+            input.type = q.type;
+            input.name = 'review-q' + i;
+            input.value = oIndex;
+            input.disabled = true;
+            input.checked = userIndices.includes(oIndex);
+
+            if (opt.correct) label.classList.add('correct');
+            else if (userIndices.includes(oIndex) && !opt.correct) label.classList.add('incorrect');
+
+            const span = document.createElement('span');
+            span.textContent = opt.text;
+
+            label.appendChild(input);
+            label.appendChild(span);
+            opts.appendChild(label);
+        });
+
+        card.appendChild(badge);
+        card.appendChild(qText);
+        card.appendChild(opts);
+        rc.appendChild(card);
+    });
+
+    rc.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ─── RESTART ─── */
+function restartQuiz() {
+    questions = pickQuestions();          // новый случайный набор
+    answers   = questions.map(() => []);
+    current   = 0;
+    document.getElementById('result-card').classList.remove('show');
+    document.getElementById('answers-wrap').classList.remove('show');
+    document.getElementById('answers-tbody').innerHTML = '';
+    document.getElementById('review-container').classList.remove('show');
+    document.getElementById('review-container').innerHTML = '';
+    document.getElementById('main-header').style.display   = 'none';
+    document.getElementById('progress-wrap').style.display = 'none';
+    document.getElementById('question-card').style.display = 'none';
+    document.getElementById('title-screen').style.display  = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Тест запускается с титульной страницы — см. startQuiz()
+</script>
+<footer class="quiz-footer">
+    <a href="https://t.me/bruhbrn" target="_blank">t.me/bruhbrn</a>
+</footer>
+</body>
+</html>
