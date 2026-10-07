@@ -7,4 +7,4 @@
 
 [Философия](https://bruhbourne.github.io/philosophy-testik.html)
 
-[ГАС «Выборы»](https://bruhbourne.github.io/DUMA.html)
+[ЭСПГ ГД ФС РФ](https://bruhbourne.github.io/DUMA.html)
