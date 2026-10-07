@@ -1,4 +1,4 @@
-# Тесты к сессии
+# Всякая всячина 
 по всем вопросам: <https://t.me/bruhbrn>
 
 [История России](https://bruhbourne.github.io/istoria-testik.html)
