@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивная схема Юридических Лиц РФ (ГК РФ)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        comm: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                            border: '#1d4ed855',
+                        },
+                        noncomm: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            500: '#ec4899',
+                            600: '#d946ef',
+                            700: '#a855f7',
+                            900: '#581c87',
+                            border: '#c084fc55',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Custom Scrollbars & Grid Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        
+        .tree-line-v {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-50%);
+        }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .comm-card {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .comm-card:hover {
+            border-color: rgba(96, 165, 250, 0.8);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+        }
+
+        .noncomm-card {
+            background: linear-gradient(135deg, rgba(88, 28, 135, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        .noncomm-card:hover {
+            border-color: rgba(192, 132, 252, 0.8);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Header -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-slate-800 px-4 py-3 sm:px-8 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="p-2.5 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-xl text-white shadow-lg shadow-indigo-500/20">
+                <i class="fa-solid font-bold fa-sitemap text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                    Юридические Лица в РФ
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">ГК РФ</span>
+                </h1>
+                <p class="text-xs text-slate-400">Полная классификация коммерческих и некоммерческих организаций</p>
+            </div>
+        </div>
+
+        <!-- Controls: Search & Filters -->
+        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            <!-- Search Bar -->
+            <div class="relative flex-1 min-w-[200px] sm:w-64">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="searchInput" placeholder="Поиск формы (например: ООО, Фонд)..." 
+                       class="w-full pl-9 pr-4 py-1.5 text-sm bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+            </div>
+
+            <!-- Category Filter Tabs -->
+            <div class="inline-flex p-1 bg-slate-900 rounded-lg border border-slate-800 text-xs">
+                <button id="filterAll" onclick="setCategoryFilter('all')" class="px-3 py-1.5 rounded-md font-medium transition-all bg-indigo-600 text-white">Все</button>
+                <button id="filterComm" onclick="setCategoryFilter('comm')" class="px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-blue-400 transition-all">Коммерческие</button>
+                <button id="filterNonComm" onclick="setCategoryFilter('noncomm')" class="px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-purple-400 transition-all">Некоммерческие</button>
+            </div>
+
+            <!-- Layout View Switcher -->
+            <div class="hidden sm:flex items-center bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs text-slate-400">
+                <button id="viewGridBtn" onclick="setViewMode('grid')" title="Сетка карточек" class="p-1.5 rounded bg-slate-800 text-white"><i class="fa-solid fa-grip"></i></button>
+                <button id="viewTreeBtn" onclick="setViewMode('tree')" title="Иерархическое дерево" class="p-1.5 rounded hover:text-white"><i class="fa-solid fa-network-wired"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-8">
+
+        <!-- Legend / Info Banner -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Commercial Legend -->
+            <div class="p-4 rounded-xl border border-blue-500/30 bg-blue-950/20 flex items-start gap-3">
+                <div class="p-2.5 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 shrink-0">
+                    <i class="fa-solid fa-chart-line text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-blue-300 flex items-center gap-2">
+                        Коммерческие организации
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">ст. 50 ГК РФ</span>
+                    </h2>
+                    <p class="text-xs text-slate-300 mt-1">Основная цель деятельности — <b>извлечение прибыли</b> с ее последующим распределением между участниками.</p>
+                </div>
+            </div>
+
+            <!-- Non-Commercial Legend -->
+            <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-950/20 flex items-start gap-3">
+                <div class="p-2.5 rounded-lg bg-purple-600/20 text-purple-400 border border-purple-500/30 shrink-0">
+                    <i class="fa-solid fa-heart-handshake text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-purple-300 flex items-center gap-2">
+                        Некоммерческие организации (НКО)
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">ст. 50 ГК РФ</span>
+                    </h2>
+                    <p class="text-xs text-slate-300 mt-1">Не имеют извлечение прибыли в качестве основной цели и <b>не распределяют прибыль</b> между участниками.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRID VIEW MODE CONTAINER -->
+        <div id="gridView" class="space-y-10 transition-all duration-300">
+
+            <!-- SECTION 1: КОММЕРЧЕСКИЕ -->
+            <section id="sectionCommercial" class="space-y-6">
+                <div class="flex items-center gap-3 border-b border-blue-900/50 pb-3">
+                    <span class="w-3 h-8 bg-blue-500 rounded-full inline-block shadow-lg shadow-blue-500/50"></span>
+                    <h2 class="text-xl font-extrabold text-blue-400 tracking-wide uppercase">I. Коммерческие Юридические Лица</h2>
+                    <span id="commCountBadge" class="ml-auto text-xs font-semibold px-2.5 py-1 bg-blue-900/40 text-blue-300 border border-blue-700/50 rounded-full">0 форм</span>
+                </div>
+
+                <!-- Commercial Grid Split (Corporate vs Unitary) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    <!-- 1.1 Корпоративные -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-slate-900/80 rounded-xl border border-blue-500/20">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-users text-blue-400"></i>
+                                <h3 class="font-bold text-slate-200 text-sm">Корпоративные</h3>
+                            </div>
+                            <span class="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Участники имеют членство</span>
+                        </div>
+                        <div id="gridCommCorp" class="space-y-3">
+                            <!-- Cards inserted by JS -->
+                        </div>
+                    </div>
+
+                    <!-- 1.2 Унитарные -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-slate-900/80 rounded-xl border border-blue-500/20">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-building-flag text-blue-400"></i>
+                                <h3 class="font-bold text-slate-200 text-sm">Унитарные</h3>
+                            </div>
+                            <span class="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Не наделены правом собственности</span>
+                        </div>
+                        <div id="gridCommUnit" class="space-y-3">
+                            <!-- Cards inserted by JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- SECTION 2: НЕКОММЕРЧЕСКИЕ -->
+            <section id="sectionNonCommercial" class="space-y-6 pt-4">
+                <div class="flex items-center gap-3 border-b border-purple-900/50 pb-3">
+                    <span class="w-3 h-8 bg-purple-500 rounded-full inline-block shadow-lg shadow-purple-500/50"></span>
+                    <h2 class="text-xl font-extrabold text-purple-400 tracking-wide uppercase">II. Некоммерческие Юридические Лица (НКО)</h2>
+                    <span id="nonCommCountBadge" class="ml-auto text-xs font-semibold px-2.5 py-1 bg-purple-900/40 text-purple-300 border border-purple-700/50 rounded-full">0 форм</span>
+                </div>
+
+                <!-- Non-Commercial Grid Split (Corporate vs Unitary) -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    <!-- 2.1 Корпоративные -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-slate-900/80 rounded-xl border border-purple-500/20">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-user-group text-purple-400"></i>
+                                <h3 class="font-bold text-slate-200 text-sm">Корпоративные НКО</h3>
+                            </div>
+                            <span class="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Членство / Право участия</span>
+                        </div>
+                        <div id="gridNonCommCorp" class="space-y-3">
+                            <!-- Cards inserted by JS -->
+                        </div>
+                    </div>
+
+                    <!-- 2.2 Унитарные -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-slate-900/80 rounded-xl border border-purple-500/20">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-landmark text-purple-400"></i>
+                                <h3 class="font-bold text-slate-200 text-sm">Унитарные НКО</h3>
+                            </div>
+                            <span class="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded">Без членства / Создаются учредителями</span>
+                        </div>
+                        <div id="gridNonCommUnit" class="space-y-3">
+                            <!-- Cards inserted by JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+
+        <!-- TREE VIEW MODE CONTAINER (Hidden by default) -->
+        <div id="treeView" class="hidden space-y-8 overflow-x-auto pb-6">
+            <div class="min-w-[900px] p-6 bg-slate-900/60 rounded-2xl border border-slate-800">
+                <div class="text-center font-bold text-lg text-slate-200 mb-8 pb-4 border-b border-slate-800 flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-balance-scale text-indigo-400"></i> Юридические лица Российской Федерации (ГК РФ)
+                </div>
+                
+                <div class="grid grid-cols-2 gap-8">
+                    <!-- Commercial Tree Branch -->
+                    <div class="border border-blue-500/40 rounded-xl p-4 bg-blue-950/20">
+                        <div class="text-center font-bold text-blue-400 uppercase text-sm mb-4 pb-2 border-b border-blue-500/30">
+                            Коммерческие организации
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div class="bg-slate-900/90 p-3 rounded-lg border border-blue-500/20 space-y-2">
+                                <div class="font-bold text-blue-300 border-b border-slate-800 pb-1">Корпоративные</div>
+                                <ul class="space-y-1 text-slate-300" id="treeCommCorpList"></ul>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-lg border border-blue-500/20 space-y-2">
+                                <div class="font-bold text-blue-300 border-b border-slate-800 pb-1">Унитарные</div>
+                                <ul class="space-y-1 text-slate-300" id="treeCommUnitList"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Non-Commercial Tree Branch -->
+                    <div class="border border-purple-500/40 rounded-xl p-4 bg-purple-950/20">
+                        <div class="text-center font-bold text-purple-400 uppercase text-sm mb-4 pb-2 border-b border-purple-500/30">
+                            Некоммерческие организации (НКО)
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div class="bg-slate-900/90 p-3 rounded-lg border border-purple-500/20 space-y-2">
+                                <div class="font-bold text-purple-300 border-b border-slate-800 pb-1">Корпоративные</div>
+                                <ul class="space-y-1 text-slate-300" id="treeNonCommCorpList"></ul>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-lg border border-purple-500/20 space-y-2">
+                                <div class="font-bold text-purple-300 border-b border-slate-800 pb-1">Унитарные</div>
+                                <ul class="space-y-1 text-slate-300" id="treeNonCommUnitList"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Dialog for Detailed Information -->
+    <div id="modalBackdrop" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <!-- Modal Header -->
+            <div id="modalHeader" class="p-5 border-b border-slate-800 flex items-start justify-between">
+                <div class="flex items-center gap-3">
+                    <div id="modalIcon" class="p-3 rounded-xl text-xl"></div>
+                    <div>
+                        <div id="modalCategoryBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"></div>
+                        <h3 id="modalTitle" class="text-xl font-bold text-white mt-1"></h3>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 overflow-y-auto space-y-5 text-sm text-slate-300">
+                <div>
+                    <h4 class="text-xs font-semibold uppercase text-slate-400 tracking-wider mb-1">Описание и сущность</h4>
+                    <p id="modalDescription" class="leading-relaxed text-slate-200 font-normal"></p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 space-y-1">
+                        <span class="text-xs text-slate-400 font-medium">Правовой режим имущества</span>
+                        <p id="modalPropertyRight" class="font-semibold text-slate-200 text-xs sm:text-sm"></p>
+                    </div>
+                    <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 space-y-1">
+                        <span class="text-xs text-slate-400 font-medium">Ответственность учредителей</span>
+                        <p id="modalLiability" class="font-semibold text-slate-200 text-xs sm:text-sm"></p>
+                    </div>
+                </div>
+
+                <div id="modalSubtypesBlock" class="space-y-2">
+                    <h4 class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Виды / Разновидности</h4>
+                    <ul id="modalSubtypes" class="space-y-1.5 pl-4 list-disc text-slate-300"></ul>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-semibold uppercase text-slate-400 tracking-wider mb-2">Известные примеры / Сфера применения</h4>
+                    <div id="modalExamples" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
+                <span id="modalLawRef">ГК РФ</span>
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-medium">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATA & LOGIC SCRIPT -->
+    <script>
+        // Database of Legal Entities according to the Civil Code of Russian Federation (GK RF)
+        const LEGAL_ENTITIES = [
+            // ==================== 1. КОММЕРЧЕСКИЕ КОРПОРАТИВНЫЕ ====================
+            {
+                id: 'ooo',
+                name: 'Общества с ограниченной ответственностью (ООО)',
+                short: 'ООО',
+                category: 'comm',
+                type: 'corp',
+                icon: 'fa-briefcase',
+                law: 'ст. 87–94 ГК РФ, ФЗ № 14-ФЗ',
+                summary: 'Самая популярная коммерческая форма в РФ. Уставный капитал разделен на доли.',
+                description: 'Хозяйственное общество, уставный капитал которого разделен на доли. Участники не отвечают по его обязательствам и несут риск убытков в пределах стоимости принадлежащих им долей.',
+                propertyRight: 'Право собственности юридического лица',
+                liability: 'Участники не несут ответственности (кроме субсидиарной при банкротстве по их вине)',
+                subtypes: ['ООО с одним участником', 'ООО с множеством участников (до 50)'],
+                examples: ['Яндекс ООО', 'Газпром Нефть-Снабжение ООО', 'Малый и средний бизнес']
+            },
+            {
+                id: 'ao',
+                name: 'Акционерные общества (АО)',
+                short: 'АО (ПАО / НПАО)',
+                category: 'comm',
+                type: 'corp',
+                icon: 'fa-chart-pie',
+                law: 'ст. 96–104 ГК РФ, ФЗ № 208-ФЗ',
+                summary: 'Уставный капитал разделен на определенное число акций.',
+                description: 'Коммерческая организация, уставный капитал которой разделен на определенное число акций. Акционеры не отвечают по обязательствам АО и несут риск убытков в пределах стоимости принадлежащих им акций.',
+                propertyRight: 'Право собственности юридического лица',
+                liability: 'Ограничена стоимостью принадлежащих акций',
+                subtypes: [
+                    'Публичные АО (ПАО) — акции публично размещаются на бирже',
+                    'Непубличные АО (НПАО) — акции распределяются только среди закрытого круга лиц'
+                ],
+                examples: ['ПАО Сбербанк', 'ПАО Лукойл', 'ПАО Аэрофлот', 'АО "Корпорация Развития"']
+            },
+            {
+                id: 'tov',
+                name: 'Хозяйственные товарищества',
+                short: 'Полные Т / Коммандитные Т',
+                category: 'comm',
+                type: 'corp',
+                icon: 'fa-handshake-angle',
+                law: 'ст. 69–86 ГК РФ',
+                summary: 'Объединения лиц, где участники несут неограниченную субсидиарную ответственность.',
+                description: 'Корпоративные коммерческие организации с разделенным на доли (вклады) складочным капиталом. Основаны на личном доверительном участии.',
+                propertyRight: 'Право собственности юридического лица',
+                liability: 'Полные товарищи отвечают ВСЕМ своим личным имуществом',
+                subtypes: [
+                    'Полное товарищество — все участники несут неограниченную ответственность',
+                    'Товарищество на вере (коммандитное) — есть полные товарищи и вкладчики (коммандитисты), рискующие только вкладом'
+                ],
+                examples: ['Товарищество "Иванов и Компания"', 'Инвестиционные товарищества на вере']
+            },
+            {
+                id: 'partn',
+                name: 'Хозяйственные партнерства',
+                short: 'ХП',
+                category: 'comm',
+                type: 'corp',
+                icon: 'fa-diagram-project',
+                law: 'ФЗ № 380-ФЗ',
+                summary: 'Специальная форма, созданная преимущественно для венчурных и инновационных проектов.',
+                description: 'Создаваемое двумя или более лицами коммерческое общество, в управлении деятельностью которого принимают участие участники партнерства, а также иные лица в пределах и в объеме, которые предусмотрены соглашением об управлении.',
+                propertyRight: 'Право собственности юридического лица',
+                liability: 'Участники не отвечают по обязательствам партнерства',
+                subtypes: ['Венчурные фонды', 'Стартап-партнерства с участием инвесторов'],
+                examples: ['Венчурные инновационные проектные компании']
+            },
+            {
+                id: 'koop_prod',
+                name: 'Производственные кооперативы (Артели)',
+                short: 'ПК',
+                category: 'comm',
+                type: 'corp',
+                icon: 'fa-helmet-safety',
+                law: 'ст. 106.1–106.6 ГК РФ, ФЗ № 41-ФЗ',
+                summary: 'Добровольное объединение граждан на основе личного трудового участия.',
+                description: 'Добровольное объединение граждан на основе членства для совместной производственной или иной хозяйственной деятельности, основанной на их личном трудовом и ином участии и объединении паевых взносов.',
+                propertyRight: 'Право собственности юридического лица',
+                liability: 'Субсидиарная ответственность членов в размерах, предусмотренных уставом',
+                subtypes: ['Сельскохозяйственные артели', 'Строительные артели', 'Артели старателей'],
+                examples: ['Артель старателей "Амур"', 'Сельскохозяйственная артель']
+            },
+            {
+                id: 'kfh',
+                name: 'Крестьянские (фермерские) хозяйства',
+                short: 'КФХ (Юр. лицо)',
+                category: 'comm',
+                type: 'corp',
+                icon: 'fa-wheat-awn',
+                law: 'ст. 86.1 ГК РФ, ФЗ № 74-ФЗ',
+                summary: 'Добровольное объединение граждан для совместной сельхоздеятельности.',
+                description: 'Добровольное объединение граждан на основе членства для совместной производственной и иной хозяйственной деятельности в сфере сельского хозяйства, основанной на их личном участии.',
+                propertyRight: 'Право собственности юр. лица на имущество, внесенное членами',
+                liability: 'Субсидиарная ответственность членов по обязательствам КФХ',
+                subtypes: ['Семейные фермерские хозяйства', 'Кооперативные сельхозобъединения'],
+                examples: ['КФХ "Кубанский фермер"', 'КФХ "Заря"']
+            },
+
+            // ==================== 2. КОММЕРЧЕСКИЕ УНИТАРНЫЕ ====================
+            {
+                id: 'gup_mup',
+                name: 'ГУП и МУП (на праве хоз. ведения)',
+                short: 'ГУП / МУП',
+                category: 'comm',
+                type: 'unit',
+                icon: 'fa-city',
+                law: 'ст. 113, 114 ГК РФ, ФЗ № 161-ФЗ',
+                summary: 'Коммерческие предприятия, имущество которых находится в государственной или муниципальной собственности.',
+                description: 'Унитарные предприятия, наделенные имуществом на праве хозяйственного ведения. Не являются собственниками закрепленного за ними имущества.',
+                propertyRight: 'Право хозяйственного ведения (собственник — РФ, субъект РФ или МО)',
+                liability: 'Предприятие отвечает своим имуществом. Собственник НЕ несет ответственности.',
+                subtypes: ['ГУП (Государственное)', 'МУП (Муниципальное)'],
+                examples: ['ГУП "Московский метрополитен"', 'МУП "Водоканал"']
+            },
+            {
+                id: 'fkp',
+                name: 'Казённые предприятия (оперативное управление)',
+                short: 'ФКП / МКП',
+                category: 'comm',
+                type: 'unit',
+                icon: 'fa-shield-halved',
+                law: 'ст. 113, 115 ГК РФ',
+                summary: 'Предприятия с минимальной самостоятельностью под субсидиарной ответственностью государства.',
+                description: 'Унитарные предприятия, основанные на праве оперативного управления. Создаются для выполнения стратегических, оборонных или государственных задач.',
+                propertyRight: 'Право оперативного управления',
+                liability: 'РФ / субъект РФ несет ПОЛНУЮ субсидиарную ответственность по долгам предприятия',
+                subtypes: [
+                    'Федеральное казённое предприятие (ФКП)',
+                    'Казённое предприятие субъекта РФ',
+                    'Муниципальное казённое предприятие (МКП)'
+                ],
+                examples: ['ФКП "Пермский пороховой завод"', 'ФКП "Росгосцирк"']
+            },
+
+            // ==================== 3. НЕКОММЕРЧЕСКИЕ КОРПОРАТИВНЫЕ ====================
+            {
+                id: 'potreb_coop',
+                name: 'Потребительские кооперативы',
+                short: 'ПК / ЖСК / ГСК / КПК',
+                category: 'noncomm',
+                type: 'corp',
+                icon: 'fa-store',
+                law: 'ст. 123.2–123.3 ГК РФ',
+                summary: 'Добровольное объединение для удовлетворения материальных и иных потребностей.',
+                description: 'Объединение граждан и юрлиц на основе членства с целью удовлетворения материальных и иных потребностей участников путем объединения имущественных паевых взносов.',
+                propertyRight: 'Право собственности кооператива',
+                liability: 'Члены несут субсидиарную ответственность по внесению дополнительных взносов (покрытию убытков)',
+                subtypes: [
+                    'Жилищные и жилищно-строительные кооперативы (ЖК, ЖСК)',
+                    'Гаражные кооперативы (ГСК)',
+                    'Кредитные потребительские кооперативы (КПК)',
+                    'Сельскохозяйственные потребительские кооперативы'
+                ],
+                examples: ['ЖСК "Маяк"', 'КПК "Кредитный Союз"', 'ГСК №5']
+            },
+            {
+                id: 'obsh_org',
+                name: 'Общественные организации',
+                short: 'ОО / Профсоюзы / Партии',
+                category: 'noncomm',
+                type: 'corp',
+                icon: 'fa-users-line',
+                law: 'ст. 123.4–123.7 ГК РФ, ФЗ № 82-ФЗ',
+                summary: 'Добровольные объединения граждан на основе общности интересов.',
+                description: 'Добровольные объединения граждан, сплотившихся на основе общности их интересов для удовлетворения духовных или иных неимущественных потребностей.',
+                propertyRight: 'Право собственности организации (участники теряют право на внесенные взносы)',
+                liability: 'Участники не отвечают по обязательствам организации',
+                subtypes: [
+                    'Политические партии',
+                    'Профессиональные союзы (Профсоюзы)',
+                    'Общественные движения',
+                    'Органы общественной самодеятельности'
+                ],
+                examples: ['Политическая партия "Единая Россия"', 'Профсоюз работников образования', 'Всероссийское общество инвалидов']
+            },
+            {
+                id: 'assoc',
+                name: 'Ассоциации и союзы',
+                short: 'Ассоциации / СРО / ТПП',
+                category: 'noncomm',
+                type: 'corp',
+                icon: 'fa-network-wired',
+                law: 'ст. 123.8–123.11 ГК РФ',
+                summary: 'Объединения юридических лиц или граждан для представления и защиты общих интересов.',
+                description: 'Объединение юридических лиц и (или) граждан, основанное на членстве и созданное для представления и защиты общих, в том числе профессиональных, интересов.',
+                propertyRight: 'Право собственности ассоциации',
+                liability: 'Члены не несут ответственности (если иное не предусмотрено уставом)',
+                subtypes: [
+                    'Саморегулируемые организации (СРО)',
+                    'Объединения работодателей',
+                    'Торгово-промышленные палаты',
+                    'Нотариальные палаты'
+                ],
+                examples: ['Ассоциация российских банков (АРБ)', 'СРО "Объединение строителей"', 'Торгово-промышленная палата РФ']
+            },
+            {
+                id: 'tsn',
+                name: 'Товарищества собственников недвижимости',
+                short: 'ТСН / ТСЖ / СНТ',
+                category: 'noncomm',
+                type: 'corp',
+                icon: 'fa-house-chimney-window',
+                law: 'ст. 123.12–123.14 ГК РФ',
+                summary: 'Объединение собственников недвижимого имущества (квартир, дач, зданий).',
+                description: 'Добровольное объединение собственников недвижимого имущества, созданное для совместного владения, пользования и распоряжения имуществом, находящимся в их общей собственности или пользовании.',
+                propertyRight: 'Право собственности ТСН на свое имущество; общее имущество — в долевой собственности владельцев',
+                liability: 'Члены не отвечают по обязательствам ТСН',
+                subtypes: [
+                    'Товарищества собственников жилья (ТСЖ)',
+                    'Садоводческие и огороднические некоммерческие товарищества (СНТ, ОНТ)'
+                ],
+                examples: ['ТСЖ "Уютный дом"', 'СНТ "Сосновый бор"']
+            },
+            {
+                id: 'kazak_obsh',
+                name: 'Казачьи общества и Общины коренных народов',
+                short: 'Казачьи общества / Общины',
+                category: 'noncomm',
+                type: 'corp',
+                icon: 'fa-feather-pointed',
+                law: 'ст. 123.15 ГК РФ',
+                summary: 'Формы объединения по культурным, этническим и традиционным признакам.',
+                description: 'Специальные формы корпоративных НКО, внесенные в государственный реестр или созданные для сохранения традиционного образа жизни и хозяйствования.',
+                propertyRight: 'Право собственности организации',
+                liability: 'Члены не отвечают по обязательствам',
+                subtypes: ['Реестровые казачьи общества', 'Общины коренных малочисленных народов Севера, Сибири и Дальнего Востока'],
+                examples: ['Всевеликое войско Донское', 'Община коренных народов "Югра"']
+            },
+            {
+                id: 'advokat_org',
+                name: 'Адвокатские палаты и образования',
+                short: 'Коллегии адвокатов / Бюро',
+                category: 'noncomm',
+                type: 'corp',
+                icon: 'fa-scale-balanced',
+                law: 'ст. 123.16–123.16-1 ГК РФ, ФЗ № 63-ФЗ',
+                summary: 'Профессиональные объединения адвокатов.',
+                description: 'Некоммерческие организации, создаваемые для обеспечения оказания квалифицированной юридической помощи и организации адвокатской деятельности.',
+                propertyRight: 'Право собственности организации',
+                liability: 'Участники (адвокаты) не отвечают по обязательствам образования',
+                subtypes: [
+                    'Федеральная адвокатская палата и палаты субъектов РФ',
+                    'Коллегии адвокатов',
+                    'Адвокатские бюро',
+                    'Юридические консультации'
+                ],
+                examples: ['Адвокатская палата г. Москвы', 'Адвокатское бюро "Резник, Гагарин и партнеры"']
+            },
+
+            // ==================== 4. НЕКОММЕРЧЕСКИЕ УНИТАРНЫЕ ====================
+            {
+                id: 'fondy',
+                name: 'Фонды (включая личные и наследственные)',
+                short: 'Фонды / Личные фонды',
+                category: 'noncomm',
+                type: 'unit',
+                icon: 'fa-hand-holding-dollar',
+                law: 'ст. 123.17–123.20-8 ГК РФ',
+                summary: 'Не имеющая членства НКО, учрежденная на основе добровольных имущественных взносов.',
+                description: 'Унитарная некоммерческая организация, преследующая благотворительные, культурные, образовательные или иные социальные, полезные цели.',
+                propertyRight: 'Право собственности фонда (учредители полностью теряют права на имущество)',
+                liability: 'Учредители не отвечают по обязательствам фонда',
+                subtypes: [
+                    'Благотворительные и общественные фонды',
+                    'Личные фонды (создаваемые гражданином при жизни)',
+                    'Наследственные фонды (создаваемые после смерти гражданина по завещанию)'
+                ],
+                examples: ['Благотворительный фонд "Подари жизнь"', 'Фонд "Поиск"', 'Личный фонд инвестора']
+            },
+            {
+                id: 'uchrezhdeniya',
+                name: 'Учреждения (Государственные, Муниципальные, Частные)',
+                short: 'ГКУ / БКУ / АКУ / ЧУ',
+                category: 'noncomm',
+                type: 'unit',
+                icon: 'fa-school',
+                law: 'ст. 123.21–123.23 ГК РФ',
+                summary: 'Организации, созданные собственником для осуществления некоммерческих функций.',
+                description: 'Унитарная некоммерческая организация, созданная собственником для осуществления управленческих, социально-культурных или иных функций некоммерческого характера.',
+                propertyRight: 'Право оперативного управления',
+                liability: 'Собственник несет субсидиарную ответственность по долгам Казённых и Частных учреждений',
+                subtypes: [
+                    'Государственные (муниципальные) учреждения: Казённые, Бюджетные, Автономные',
+                    'Частные (в т.ч. общественные) учреждения'
+                ],
+                examples: ['МГУ им. М.В. Ломоносова (Бюджетное)', 'Государственная Третьяковская галерея', 'Частная школа "Ломоносовская"']
+            },
+            {
+                id: 'ano',
+                name: 'Автономные некоммерческие организации (АНО)',
+                short: 'АНО',
+                category: 'noncomm',
+                type: 'unit',
+                icon: 'fa-lightbulb',
+                law: 'ст. 123.24–123.25 ГК РФ',
+                summary: 'Организации для оказания услуг в сфере образования, науки, здравоохранения, спорта.',
+                description: 'Не имеющая членства унитарная некоммерческая организация, созданная на основе добровольных имущественных взносов для оказания услуг в сферах здравоохранения, образования, науки, культуры, спорта и др.',
+                propertyRight: 'Право собственности АНО на переданное имущество',
+                liability: 'Учредители не отвечают по обязательствам АНО',
+                subtypes: ['АНО в сфере образования', 'АНО развития цифровой экономики', 'Ано экспертные центры'],
+                examples: ['АНО "Россия — страна возможностей"', 'АНО "Цифровая экономика"', 'Ано медицинский центр']
+            },
+            {
+                id: 'relig',
+                name: 'Религиозные организации',
+                short: 'РО',
+                category: 'noncomm',
+                type: 'unit',
+                icon: 'fa-place-of-worship',
+                law: 'ст. 123.26–123.28 ГК РФ, ФЗ № 125-ФЗ',
+                summary: 'Объединения граждан для совместного исповедания и распространения веры.',
+                description: 'Добровольное объединение граждан, образованное в целях совместного исповедания и распространения веры и зарегистрированное в качестве юридического лица.',
+                propertyRight: 'Право собственности религиозной организации',
+                liability: 'Учредители и участники не отвечают по обязательствам',
+                subtypes: ['Централизованные религиозные организации', 'Местные религиозные организации', 'Монастыри и религиозные образовательные учреждения'],
+                examples: ['Приход Свято-Троицкого Храма', 'Центральное духовное управление мусульман']
+            },
+            {
+                id: 'gos_corp',
+                name: 'Госкорпорации, Госкомпании и ППК',
+                short: 'ГК / ГМК / ППК',
+                category: 'noncomm',
+                type: 'unit',
+                icon: 'fa-monument',
+                law: 'ФЗ № 7-ФЗ, ФЗ № 236-ФЗ, спец. законы',
+                summary: 'Унитарные НКО, создаваемые РФ на основании отдельных федеральных законов.',
+                description: 'Особые формы некоммерческих унитарных организаций, учреждаемые Российской Федерацией для выполнения важнейших государственных функций и стратегических задач.',
+                propertyRight: 'Право собственности госкорпорации / ППК на имущество, переданное РФ',
+                liability: 'РФ не отвечает по обязательствам ГК / ППК (если иной закон не предусматривает)',
+                subtypes: [
+                    'Государственные корпорации (ГК)',
+                    'Государственные компании',
+                    'Публично-правовые компании (ППК)'
+                ],
+                examples: ['Госкорпорация "Росатом"', 'Госкорпорация "Ростех"', 'ППК "Роскадастр"', 'ППК "РЭО"']
+            }
+        ];
+
+        // State variables
+        let currentFilter = 'all';
+        let currentSearch = '';
+        let currentView = 'grid';
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            renderData();
+
+            // Search Event listener
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                currentSearch = e.target.value.toLowerCase().trim();
+                renderData();
+            });
+        });
+
+        // Set View Mode (Grid vs Tree)
+        function setViewMode(mode) {
+            currentView = mode;
+            const gridView = document.getElementById('gridView');
+            const treeView = document.getElementById('treeView');
+            const gridBtn = document.getElementById('viewGridBtn');
+            const treeBtn = document.getElementById('viewTreeBtn');
+
+            if (mode === 'grid') {
+                gridView.classList.remove('hidden');
+                treeView.classList.add('hidden');
+                gridBtn.classList.add('bg-slate-800', 'text-white');
+                treeBtn.classList.remove('bg-slate-800', 'text-white');
+            } else {
+                gridView.classList.add('hidden');
+                treeView.classList.remove('hidden');
+                treeBtn.classList.add('bg-slate-800', 'text-white');
+                gridBtn.classList.remove('bg-slate-800', 'text-white');
+            }
+        }
+
+        // Set Category Filter
+        function setCategoryFilter(filter) {
+            currentFilter = filter;
+
+            // Button styling
+            ['filterAll', 'filterComm', 'filterNonComm'].forEach(id => {
+                const btn = document.getElementById(id);
+                btn.className = "px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition-all";
+            });
+
+            if (filter === 'all') {
+                document.getElementById('filterAll').className = "px-3 py-1.5 rounded-md font-medium transition-all bg-indigo-600 text-white";
+                document.getElementById('sectionCommercial').style.display = 'block';
+                document.getElementById('sectionNonCommercial').style.display = 'block';
+            } else if (filter === 'comm') {
+                document.getElementById('filterComm').className = "px-3 py-1.5 rounded-md font-medium transition-all bg-blue-600 text-white";
+                document.getElementById('sectionCommercial').style.display = 'block';
+                document.getElementById('sectionNonCommercial').style.display = 'none';
+            } else if (filter === 'noncomm') {
+                document.getElementById('filterNonComm').className = "px-3 py-1.5 rounded-md font-medium transition-all bg-purple-600 text-white";
+                document.getElementById('sectionCommercial').style.display = 'none';
+                document.getElementById('sectionNonCommercial').style.display = 'block';
+            }
+
+            renderData();
+        }
+
+        // Filter Function
+        function filterEntities() {
+            return LEGAL_ENTITIES.filter(item => {
+                // Category filter
+                if (currentFilter !== 'all' && item.category !== currentFilter) {
+                    return false;
+                }
+                // Search filter
+                if (currentSearch) {
+                    const inName = item.name.toLowerCase().includes(currentSearch);
+                    const inShort = item.short.toLowerCase().includes(currentSearch);
+                    const inDesc = item.description.toLowerCase().includes(currentSearch);
+                    const inSubtypes = item.subtypes.some(s => s.toLowerCase().includes(currentSearch));
+                    return inName || inShort || inDesc || inSubtypes;
+                }
+                return true;
+            });
+        }
+
+        // Render Data into Grids and Trees
+        function renderData() {
+            const items = filterEntities();
+
+            // Clear containers
+            const gridCommCorp = document.getElementById('gridCommCorp');
+            const gridCommUnit = document.getElementById('gridCommUnit');
+            const gridNonCommCorp = document.getElementById('gridNonCommCorp');
+            const gridNonCommUnit = document.getElementById('gridNonCommUnit');
+
+            gridCommCorp.innerHTML = '';
+            gridCommUnit.innerHTML = '';
+            gridNonCommCorp.innerHTML = '';
+            gridNonCommUnit.innerHTML = '';
+
+            // Tree lists
+            const treeCommCorpList = document.getElementById('treeCommCorpList');
+            const treeCommUnitList = document.getElementById('treeCommUnitList');
+            const treeNonCommCorpList = document.getElementById('treeNonCommCorpList');
+            const treeNonCommUnitList = document.getElementById('treeNonCommUnitList');
+
+            treeCommCorpList.innerHTML = '';
+            treeCommUnitList.innerHTML = '';
+            treeNonCommCorpList.innerHTML = '';
+            treeNonCommUnitList.innerHTML = '';
+
+            let commCount = 0;
+            let nonCommCount = 0;
+
+            items.forEach(item => {
+                const isComm = item.category === 'comm';
+                if (isComm) commCount++; else nonCommCount++;
+
+                // Generate Card HTML
+                const cardHTML = `
+                    <div onclick="openModal('${item.id}')" class="${isComm ? 'comm-card' : 'noncomm-card'} p-4 rounded-xl cursor-pointer transition-all duration-200 group relative overflow-hidden">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-start gap-3">
+                                <div class="p-2.5 rounded-lg ${isComm ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'bg-purple-600/20 text-purple-400 border border-purple-500/30'} group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid ${item.icon} text-base"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-100 text-sm group-hover:text-white transition-colors leading-snug">${item.name}</h4>
+                                    <span class="text-[10px] text-slate-400 font-mono mt-0.5 block">${item.law}</span>
+                                </div>
+                            </div>
+                            <span class="text-slate-500 group-hover:text-slate-300 transition-colors">
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-3 line-clamp-2 leading-relaxed">${item.summary}</p>
+                        
+                        <div class="mt-3 pt-2 border-t border-slate-800/80 flex flex-wrap gap-1.5">
+                            ${item.subtypes.slice(0, 2).map(st => `
+                                <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900/80 text-slate-300 border border-slate-800 truncate max-w-[200px]">${st}</span>
+                            `).join('')}
+                            ${item.subtypes.length > 2 ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-slate-500">+${item.subtypes.length - 2}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Append Card to Grid Container
+                if (item.category === 'comm' && item.type === 'corp') gridCommCorp.innerHTML += cardHTML;
+                if (item.category === 'comm' && item.type === 'unit') gridCommUnit.innerHTML += cardHTML;
+                if (item.category === 'noncomm' && item.type === 'corp') gridNonCommCorp.innerHTML += cardHTML;
+                if (item.category === 'noncomm' && item.type === 'unit') gridNonCommUnit.innerHTML += cardHTML;
+
+                // Append Item to Tree Lists
+                const treeItemHTML = `
+                    <li onclick="openModal('${item.id}')" class="cursor-pointer hover:text-white flex items-center gap-1.5 py-0.5 transition-colors">
+                        <i class="fa-solid ${item.icon} text-[10px] opacity-70"></i>
+                        <span class="truncate">${item.short}</span>
+                    </li>
+                `;
+                if (item.category === 'comm' && item.type === 'corp') treeCommCorpList.innerHTML += treeItemHTML;
+                if (item.category === 'comm' && item.type === 'unit') treeCommUnitList.innerHTML += treeItemHTML;
+                if (item.category === 'noncomm' && item.type === 'corp') treeNonCommCorpList.innerHTML += treeItemHTML;
+                if (item.category === 'noncomm' && item.type === 'unit') treeNonCommUnitList.innerHTML += treeItemHTML;
+            });
+
+            // Update badges count
+            document.getElementById('commCountBadge').innerText = `${commCount} форм`;
+            document.getElementById('nonCommCountBadge').innerText = `${nonCommCount} форм`;
+
+            // Empty state handlers
+            if (gridCommCorp.children.length === 0) gridCommCorp.innerHTML = `<div class="text-xs text-slate-500 italic p-3 text-center">Ничего не найдено</div>`;
+            if (gridCommUnit.children.length === 0) gridCommUnit.innerHTML = `<div class="text-xs text-slate-500 italic p-3 text-center">Ничего не найдено</div>`;
+            if (gridNonCommCorp.children.length === 0) gridNonCommCorp.innerHTML = `<div class="text-xs text-slate-500 italic p-3 text-center">Ничего не найдено</div>`;
+            if (gridNonCommUnit.children.length === 0) gridNonCommUnit.innerHTML = `<div class="text-xs text-slate-500 italic p-3 text-center">Ничего не найдено</div>`;
+        }
+
+        // Modal Functions
+        function openModal(id) {
+            const item = LEGAL_ENTITIES.find(e => e.id === id);
+            if (!item) return;
+
+            const isComm = item.category === 'comm';
+
+            // Modal Header Styling
+            const iconBox = document.getElementById('modalIcon');
+            const badge = document.getElementById('modalCategoryBadge');
+
+            if (isComm) {
+                iconBox.className = "p-3 rounded-xl text-xl bg-blue-600/20 text-blue-400 border border-blue-500/30";
+                badge.className = "text-[10px] font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-blue-900/50 text-blue-300 border border-blue-700/50";
+                badge.innerText = `Коммерческая • ${item.type === 'corp' ? 'Корпоративная' : 'Унитарная'}`;
+            } else {
+                iconBox.className = "p-3 rounded-xl text-xl bg-purple-600/20 text-purple-400 border border-purple-500/30";
+                badge.className = "text-[10px] font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-purple-900/50 text-purple-300 border border-purple-700/50";
+                badge.innerText = `Некоммерческая (НКО) • ${item.type === 'corp' ? 'Корпоративная' : 'Унитарная'}`;
+            }
+
+            iconBox.innerHTML = `<i class="fa-solid ${item.icon}"></i>`;
+            document.getElementById('modalTitle').innerText = item.name;
+            document.getElementById('modalDescription').innerText = item.description;
+            document.getElementById('modalPropertyRight').innerText = item.propertyRight;
+            document.getElementById('modalLiability').innerText = item.liability;
+            document.getElementById('modalLawRef').innerText = `Нормативное основание: ${item.law}`;
+
+            // Subtypes
+            const subtypesList = document.getElementById('modalSubtypes');
+            subtypesList.innerHTML = item.subtypes.map(st => `<li class="text-slate-300">${st}</li>`).join('');
+
+            // Examples
+            const examplesDiv = document.getElementById('modalExamples');
+            examplesDiv.innerHTML = item.examples.map(ex => `
+                <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 text-xs font-medium">${ex}</span>
+            `).join('');
+
+            // Show backdrop
+            document.getElementById('modalBackdrop').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modalBackdrop').classList.add('hidden');
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Close modal on backdrop click
+        document.getElementById('modalBackdrop').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modalBackdrop')) closeModal();
+        });
+    </script>
+</body>
+</html>
